@@ -66,5 +66,13 @@ Mark a new command as verified only after running it.
 - External LLM calls are opt-in. Read `GEMINI_API_KEY` from Colab Secrets only, and never print or commit it.
   Phase 4 uses the official `google-genai` SDK (CrewAI was rejected over dependency conflicts).
 
+## Agent rules
+- Agents use only the four read-only tools, with the case bound by application code. No mailbox access, sending,
+  deleting, link visits, attachment execution or autonomous remediation.
+- Classifier fields in reports come from trusted state only. Replay output is never live-agent validation, and
+  `no_strong_indicators` is never "safe".
+- Keep the budgets (3 rounds, 5 tools, 6 requests, 90 s) unless the owner asks to change them. SDK retries stay off.
+- Add phase cells to the notebook by appending or editing in place; preserve existing cell IDs.
+
 ## Status tracking
 Update `COLAB_STATUS.md` after each phase, with evidence (a commit hash, a Colab run date, metrics).

@@ -14,13 +14,24 @@ below follow the owner's prompts.
 | 1 | Data acquisition/audit & Colab verification | **Done locally; Colab verification pending** (no executed Colab notebook supplied yet) | `docs/DATASET_CARD.md`, `reports/audit_summary.json`, `reports/split_manifest.csv` |
 | 2 | Classifier training & evaluation | **Done locally; Colab verification pending** | `docs/MODEL_EVALUATION.md`, `reports/phase2_metrics.json`, code `e19b8cc` |
 | 3 | Local evidence tools & playbook retrieval (RAG over a small, cited playbook corpus) | **Done locally; Colab verification pending.** Live LLM preflight unverified (no credentials). | `docs/TOOLS_AND_EVIDENCE.md`, `reports/retrieval_check.json`, `reports/phase3_summary.json`, code `86993a3` |
-| 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | Not started | |
+| 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | **Implemented; offline-tested; local notebook run.** Colab and live-provider verification pending. | `docs/AGENT_WORKFLOW.md`, `reports/phase4_summary.json`, code `30a2378` |
 | 5 | Notebook interface, report export & agent evaluation | Not started | |
 | 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | Not started | |
 
+## Verification matrix (as of 2026-10-15)
+| Stage | Implementation | Offline tests | Local notebook run | Genuine Colab run | Live provider |
+|---|---|---|---|---|---|
+| 1 Data | done | yes | yes | **pending** | n/a |
+| 2 Classifier | done | yes | yes (reproduced exactly) | **pending** | n/a |
+| 3 Evidence, retrieval, tools | done | yes | yes | **pending** | preflight **never run** (no key) |
+| 4 Agents | done | yes (80 tests total) | yes, at `30a2378` | **pending** | **never run** (no key) |
+
+"Local" means this Mac (Python 3.13.7, pandas 3.0.6, scikit-learn 1.9.1). Nothing here has been verified in
+Google Colab or against the Gemini API.
+
 ## Colab verification log
-- Rechecked 2026-10-15 (phase 3): still no `colab_import/` folder and no run output from the owner. Nothing
-  has been verified in Colab yet, and everything below ran **locally**.
+- Rechecked 2026-10-15 (phases 3 and 4): still no `colab_import/` folder and no run output from the owner.
+  Nothing has been verified in Colab yet, and everything below ran **locally**.
 
 ## Stage 2 evidence (local, 2026-10-15)
 - **Environment:** macOS, 10 CPUs, Python 3.13.7, scikit-learn 1.9.1, pandas 3.0.6, numpy 2.5.4.
@@ -60,18 +71,38 @@ below follow the owner's prompts.
   with 2.31.0, and it brings about 141 packages.
 - **Tests:** `pytest tests` → 57 passed (local, offline; network blocked in the phase 3 tests).
 
+## Stage 4 evidence (local, 2026-10-15)
+- **Workflow:** the model chooses tool calls within budgets (3 rounds, 5 executions, 6 requests, 90 s), with the
+  case bound by the application. Finalization runs with tools disabled and a JSON schema. Deterministic citation
+  and claim checks follow, then a separate reviewer, at most one revision, and otherwise needs_human_review.
+- **Modes:** live (Gemini, preflight-gated), scripted replay (labelled not live), evidence-only (no LLM).
+- **Replay demos** (synthetic emails, scripted turns, workflow only):
+  - The credential case was approved after one reviewer correction.
+  - The prompt-injection case cited the injected instruction as evidence and did not obey it.
+  - The ambiguous case returned insufficient_evidence.
+  - In the benign notification, the classifier says **phishing** (≈ 0.90) while the replay assessment is
+    no_strong_indicators. The report surfaces this as a warning, consistent with the dataset confound.
+- **Tests:** `pytest tests` → 80 passed (local, offline). The 23 agent tests cover multi-turn tool use, reviewer
+  correction, unresolved review, cross-case and invented citations, invalid and duplicate calls, the tool, request
+  and deadline budgets, timeout retry, non-retryable provider errors, malformed output, modes and missing
+  credentials, prompt injection, and the Gemini protocol (via a fake client).
+- **Notebook:** sections 0–27 ran locally at `30a2378`, and phase 1–3 outputs reproduced exactly.
+  The live agent was skipped (`RUN_LIVE_AGENT = False`, no key).
+
 ## Blockers and open risks
-- **No Colab run of any phase yet.** Stages 1–3 stay "pending" until an executed Colab notebook or the run
+- **No Colab run of any phase yet.** Stages 1–4 stay "pending" until an executed Colab notebook or the run
   output is supplied.
 - **Confounded data:** source = label in every split; no external validation set (searched once on 2026-10-15,
   recorded as pending); residual cues `utf`/`url`/topics; a ~15-year date gap.
-- **No live LLM call yet.** The owner must add the `GEMINI_API_KEY` Colab secret and run section 21 before the
-  agent phase depends on Gemini.
+- **No live LLM call yet (main blocker for the agent demo).** Smallest fix: add the `GEMINI_API_KEY` Colab
+  secret, set `RUN_LLM_PREFLIGHT = True` (section 21) and `RUN_LIVE_AGENT = True` (section 26), then run them.
+  If `gemini-3.8-flash` is not available to the account, set `PHISHTRIAGE_GEMINI_MODEL` to a model that passes
+  the preflight.
 - **Colab uses pandas 2.x and possibly a different scikit-learn minor version.** Models are retrained in the
   runtime, so artifacts are never moved across versions.
 
 ## Next action
-1. Owner: in a fresh Colab runtime, run sections 0–22. Optionally add the `GEMINI_API_KEY` secret and set
-   `RUN_LLM_PREFLIGHT = True` in section 21. Send back the outputs listed in the handoff.
-2. Stage 4: bounded investigator and reviewer agents using the four tools (step and tool budgets, cited
-   evidence IDs, prompt-injection tests).
+1. Owner: in a fresh Colab runtime, run sections 0–27. Then, with the secret configured, run section 21
+   (`RUN_LLM_PREFLIGHT = True`) and section 26 (`RUN_LIVE_AGENT = True`), and section 27 again. Send back the
+   outputs listed in the handoff, or place the downloaded notebook in `colab_import/`.
+2. Stage 5: notebook interface (ipywidgets), report export and agent evaluation.

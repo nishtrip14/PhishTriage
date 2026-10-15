@@ -13,12 +13,14 @@ Small, non-sensitive evidence only. No message text, raw data or model binaries.
 | `model_manifests.json` | Manifests of the locally saved models (no binaries) |
 | `retrieval_check.json` | Phase 3 retrieval check-set results (16 predeclared queries) |
 | `phase3_summary.json` | Phase 3 tool failure checks, synthetic demo evidence counts, pipeline summary, LLM preflight status |
+| `phase4_summary.json` | Phase 4 runs kept separate by mode: scripted replay (not live), evidence-only, live (skipped so far) |
 | `figures/*.png` | Class balance, text length, test PR curves, test confusion matrices |
 | `PhishTriage_Colab_Executed.ipynb` | *Not created yet.* A sanitized copy of the notebook after a **genuine** fresh-runtime Colab run. Its outputs must never be fabricated. |
 
 **Source versions verified (all local runs on 2026-10-15, `environment: local`):**
 - Phase 1–2 files: code commit `e19b8cc`, clean tree. Re-running at `86993a3` reproduced them exactly, apart from
   timings, so they were left unchanged.
-- Phase 3 files: code commit `86993a3`, clean tree.
+- Phase 3 files: code commit `86993a3`, clean tree. Reproduced exactly at `30a2378`.
+- Phase 4 file: code commit `30a2378`, clean tree. Replay and evidence-only only; no live run.
 
 Colab-generated versions will replace these once a Colab run is supplied.

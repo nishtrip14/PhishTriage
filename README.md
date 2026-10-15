@@ -32,8 +32,13 @@ the agent phase. See [docs/TOOLS_AND_EVIDENCE.md](docs/TOOLS_AND_EVIDENCE.md).
 **Reproducible Colab runs:** set `PHISHTRIAGE_REVISION` (section 0) to a full commit SHA. The default
 `phishtriage-colab` branch moves with every push.
 
-Next stages: bounded investigator/reviewer agents, then a notebook interface with report export
-([COLAB_STATUS.md](COLAB_STATUS.md)).
+**Agents (phase 4, local; not yet run live):** a bounded investigator chooses among the four tools for one
+application-bound case. Its draft goes through deterministic citation checks and a separate reviewer pass, with at
+most one revision; otherwise the case is marked *needs human review*. Modes: live Gemini (opt-in, gated by the
+preflight), clearly labelled scripted replay, and an evidence-only mode with no LLM. "No strong indicators" is
+never proof of safety. See [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md).
+
+Next stage: a notebook interface with report export ([COLAB_STATUS.md](COLAB_STATUS.md)).
 
 ## Repository layout
 
@@ -41,10 +46,11 @@ Next stages: bounded investigator/reviewer agents, then a notebook interface wit
 |------|---------|
 | `notebooks/PhishTriage_Colab.ipynb` | Canonical development notebook (source of truth) |
 | `reports/PhishTriage_Colab_Executed.ipynb` | Sanitized, genuinely executed demo copy (created after a real Colab run) |
-| `phishtriage/` | Library code imported by the notebook: data, text, models, inference, evidence, retrieval, tools |
+| `phishtriage/` | Library code imported by the notebook: data, text, models, inference, evidence, retrieval, tools, agent |
 | `tests/` | Offline tests (`pytest tests`) |
 | `docs/DATASET_CARD.md`, `docs/MODEL_EVALUATION.md` | Data provenance and limitations; baseline evaluation |
 | `docs/TOOLS_AND_EVIDENCE.md` | Evidence schemas, safe input, playbooks, retrieval, tools, LLM preflight |
+| `docs/AGENT_WORKFLOW.md` | Agent state machine, report contract, budgets, modes, failure behaviour |
 | `phishtriage/playbooks/` | Example playbooks (labelled EXAMPLE POLICY) and the retrieval check set |
 | `docs/COLAB_WORKFLOW.md` | How to sync changes between GitHub and Colab safely |
 | `COLAB_STATUS.md` | Phase progress, evidence, blockers, next action |
