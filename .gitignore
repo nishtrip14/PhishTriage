@@ -1,0 +1,69 @@
+# --- Secrets & credentials -------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials*.json
+client_secret*.json
+service_account*.json
+token.json
+kaggle.json
+.netrc
+
+# --- Raw / downloaded datasets (fetched at runtime in Colab) ---------------
+data/raw/
+data/external/
+data/interim/
+*.mbox
+*.eml
+*.pst
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
+# --- Temporary Colab downloads & scratch -----------------------------------
+sample_data/
+/content/
+tmp/
+scratch/
+downloads/
+*.crdownload
+*.part
+
+# --- Large generated artifacts ---------------------------------------------
+models/
+checkpoints/
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.h5
+*.onnx
+*.safetensors
+*.parquet
+*.npy
+*.npz
+
+# --- Python caches & virtual environments ----------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# --- OS / editor -----------------------------------------------------------
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Notebooks (notebooks/*.ipynb, reports/*.ipynb) and small results
+# (reports/*.csv, reports/*.json, reports/figures/*.png) are intentionally tracked.
