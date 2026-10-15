@@ -1,0 +1,200 @@
+{
+  "collection": "PhishTriage example playbooks",
+  "collection_version": "1.0",
+  "updated": "2026-10-15",
+  "label": "EXAMPLE POLICY: original illustrative teaching material written for the PhishTriage academic project. Not an institutional policy, legal advice or an official cybersecurity standard.",
+  "playbooks": [
+    {
+      "doc_id": "PB-01",
+      "version": "1.0",
+      "title": "Suspected credential theft",
+      "situation": "A message asks the recipient to sign in, verify an account, reset or confirm a password, or restore a mailbox or account that is said to be locked, full, expiring or suspended.",
+      "observations": [
+        "Language asking the reader to log in, verify identity or re-enter a password",
+        "Claims that an account or mailbox will be suspended, deactivated or deleted",
+        "A link whose visible text names one service while the target host is different",
+        "A sender domain that does not belong to the service being named"
+      ],
+      "benign_alternatives": [
+        "A genuine password-expiry reminder from the organisation's own IT service",
+        "A sign-in notification the recipient actually triggered moments earlier"
+      ],
+      "next_steps": [
+        "Do not use links or forms in the message; open the service by typing its known address",
+        "Ask the recipient whether they requested the reset or sign-in",
+        "If credentials were entered, escalate to a human responder so the password can be changed and sessions reviewed"
+      ],
+      "limitations": [
+        "Keyword cues are weak on their own; legitimate IT notices use the same words",
+        "This tool cannot see whether the linked page actually collects credentials"
+      ]
+    },
+    {
+      "doc_id": "PB-02",
+      "version": "1.0",
+      "title": "Invoice or payment-detail change",
+      "situation": "A message announces new bank details, asks for an urgent wire transfer, or attaches or links an invoice that requests payment to a changed account.",
+      "observations": [
+        "Words such as new bank details, account number, IBAN, SWIFT, wire transfer or remittance",
+        "Pressure to pay today or to keep the request confidential",
+        "Reply-To pointing to a different domain from the supplier's usual address",
+        "An unexpected invoice attachment"
+      ],
+      "benign_alternatives": [
+        "A supplier that genuinely changed banks and has announced it through established channels",
+        "A routine invoice that matches an existing purchase order"
+      ],
+      "next_steps": [
+        "Do not change payment details based on the email alone",
+        "Verify with the supplier using a phone number or contact already on file, not one given in the message",
+        "Involve the finance approver before any transfer, and escalate if money has already been sent"
+      ],
+      "limitations": [
+        "Payment fraud can come from a genuinely compromised supplier mailbox, so header checks may look normal",
+        "The text classifier was not trained specifically on business email compromise"
+      ]
+    },
+    {
+      "doc_id": "PB-03",
+      "version": "1.0",
+      "title": "Sender or Reply-To mismatch",
+      "situation": "The From address, its display name, or the Reply-To address point to different organisations or domains.",
+      "observations": [
+        "Reply-To domain differs from the From domain",
+        "The display name contains an email address that differs from the actual From address",
+        "A free webmail address used for an organisation's official business"
+      ],
+      "benign_alternatives": [
+        "Ticketing systems, mailing lists, newsletters and shared mailboxes often set a different Reply-To",
+        "Marketing platforms send on behalf of companies from their own domains"
+      ],
+      "next_steps": [
+        "Compare the addresses with known contacts for that organisation",
+        "Do not reply with sensitive information until the sender is confirmed through a separate channel",
+        "Treat the mismatch as one signal to weigh with the content, not as proof"
+      ],
+      "limitations": [
+        "Headers are controlled by the sender and relays; this tool does not authenticate them",
+        "A matching From and Reply-To does not prove the sender is genuine"
+      ]
+    },
+    {
+      "doc_id": "PB-04",
+      "version": "1.0",
+      "title": "Suspicious link presentation",
+      "situation": "Links in the message look misleading: the visible text and target differ, or the URL uses an IP address, look-alike or punycode host, embedded credentials, or plain HTTP for a login page.",
+      "observations": [
+        "Visible link text names one domain while the target host is another",
+        "Host is an IP address literal or contains punycode (xn--)",
+        "User information before an @ sign inside the URL",
+        "Plain http:// for something presented as a sign-in or payment page"
+      ],
+      "benign_alternatives": [
+        "Email marketing and security gateways rewrite links through tracking or scanning domains",
+        "Internal tools sometimes use IP addresses on private networks"
+      ],
+      "next_steps": [
+        "Do not click; inspect the full target address as text",
+        "Reach the named service by typing its known address",
+        "Escalate to a human reviewer if the link imitates a known brand"
+      ],
+      "limitations": [
+        "URLs are inspected as strings only; nothing is visited, resolved or reputation-checked",
+        "The training data had link targets removed, so the classifier score says nothing about URLs"
+      ]
+    },
+    {
+      "doc_id": "PB-05",
+      "version": "1.0",
+      "title": "Unexpected attachment",
+      "situation": "The message carries or announces an attachment the recipient did not expect, especially archives, executables, scripts, macro-enabled documents or files that ask the reader to enable content.",
+      "observations": [
+        "Attachment metadata showing an archive, script, executable or macro-capable type",
+        "A filename with a double extension or a mismatch between name and declared type",
+        "Text urging the reader to open the attachment or enable editing or content"
+      ],
+      "benign_alternatives": [
+        "A colleague sending an expected document, possibly zipped for size",
+        "Automated reports that arrive on a known schedule"
+      ],
+      "next_steps": [
+        "Do not open or extract the attachment",
+        "Confirm with the sender through a separate channel that they sent it",
+        "Hand the file to people with an isolated analysis environment if further inspection is needed"
+      ],
+      "limitations": [
+        "Only metadata (name, declared type, size, hash) is recorded; content is never opened or scanned",
+        "Declared types and filenames can be falsified by the sender"
+      ]
+    },
+    {
+      "doc_id": "PB-06",
+      "version": "1.0",
+      "title": "Legitimate urgent communication",
+      "situation": "A message is urgent or asks for action but may well be genuine, for example a real deadline, outage notice, schedule change or security announcement from a known source.",
+      "observations": [
+        "Urgency without requests for credentials, payment changes or unexpected attachments",
+        "Content consistent with work the recipient is already doing",
+        "Links, if any, point to the organisation's usual domains"
+      ],
+      "benign_alternatives": [
+        "This playbook itself describes the benign case: urgency alone is common in genuine mail"
+      ],
+      "next_steps": [
+        "Act through normal channels, such as opening the known portal rather than the email link, when unsure",
+        "Avoid over-escalating: record why the message appears legitimate",
+        "Re-check if a follow-up message adds credential, payment or attachment requests"
+      ],
+      "limitations": [
+        "Attackers deliberately imitate genuine urgent notices",
+        "A legitimate-looking message can still come from a compromised account"
+      ]
+    },
+    {
+      "doc_id": "PB-07",
+      "version": "1.0",
+      "title": "Missing or conflicting evidence",
+      "situation": "Important information is unavailable (no headers, pasted text only, truncated content), checks failed, or the available signals disagree with each other.",
+      "observations": [
+        "Evidence marked unavailable or error",
+        "Authentication-Results claims that disagree with each other",
+        "Classifier output that conflicts with header or link observations",
+        "Input truncated by the length policy"
+      ],
+      "benign_alternatives": [
+        "Missing headers are normal for pasted text and do not imply danger"
+      ],
+      "next_steps": [
+        "State explicitly what is missing; do not treat missing information as evidence of safety",
+        "Ask for the original message as an .eml file if headers or attachments matter",
+        "Prefer a cautious, human-reviewed outcome over a confident automated verdict"
+      ],
+      "limitations": [
+        "No automated tool can fill in information that was never provided"
+      ]
+    },
+    {
+      "doc_id": "PB-08",
+      "version": "1.0",
+      "title": "Human escalation and verification",
+      "situation": "A case needs a human decision: high-impact requests (money, credentials, sensitive data), signs that the recipient already acted, conflicting evidence, or low confidence in the automated triage.",
+      "observations": [
+        "The recipient may have clicked, replied, paid or entered credentials",
+        "Requests involving money, credentials or personal data",
+        "Strong disagreement between evidence sources"
+      ],
+      "benign_alternatives": [
+        "Escalation is a safe default and does not imply the message is malicious"
+      ],
+      "next_steps": [
+        "Hand over the case summary with evidence IDs and their status (observed, unverified claim, unavailable, error)",
+        "Verify with the purported sender using contact details already on file",
+        "If someone already acted, prioritise containment steps such as password changes and payment recall through the proper people"
+      ],
+      "limitations": [
+        "This example playbook does not define who the responders are in any real organisation",
+        "Timelines and contacts must come from the actual organisation's own procedures"
+      ]
+    }
+  ]
+}

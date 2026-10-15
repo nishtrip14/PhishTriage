@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "written": "2026-10-15",
+  "note": "Expectations were written before running retrieval. 'expected' lists acceptable doc_ids for the top hit; an empty list means the correct behaviour is to return no playbook (or the status given in expected_status).",
+  "checks": [
+    {"id": "RC-01", "query": "please verify your account password or your mailbox will be suspended", "expected": ["PB-01"]},
+    {"id": "RC-02", "query": "sign in to restore access to your locked account", "expected": ["PB-01"]},
+    {"id": "RC-03", "query": "our bank details have changed, send the wire transfer to the new IBAN today", "expected": ["PB-02"]},
+    {"id": "RC-04", "query": "attached invoice requires urgent payment to a new account number", "expected": ["PB-02"]},
+    {"id": "RC-05", "query": "reply-to address domain differs from the from address", "expected": ["PB-03"]},
+    {"id": "RC-06", "query": "display name shows a different email address than the sender", "expected": ["PB-03"]},
+    {"id": "RC-07", "query": "link text shows one domain but the target host is an IP address", "expected": ["PB-04"]},
+    {"id": "RC-08", "query": "punycode host in the url", "expected": ["PB-04"]},
+    {"id": "RC-09", "query": "unexpected zip archive attachment asking to enable macros", "expected": ["PB-05"]},
+    {"id": "RC-10", "query": "scheduled maintenance outage notice from the usual IT portal tonight, urgent but no login requested", "expected": ["PB-06"]},
+    {"id": "RC-11", "query": "headers unavailable, pasted text only, authentication results conflict", "expected": ["PB-07"]},
+    {"id": "RC-12", "query": "the user already clicked the link and entered credentials, who should verify and escalate", "expected": ["PB-08", "PB-01"]},
+    {"id": "RC-13", "query": "", "expected": [], "expected_status": "empty_query"},
+    {"id": "RC-14", "query": "hello", "expected": [], "expected_status": "no_relevant_match"},
+    {"id": "RC-15", "query": "recipe for banana bread with walnuts", "expected": [], "expected_status": "no_relevant_match"},
+    {"id": "RC-16", "query": "team lunch moved to friday at noon", "expected": [], "expected_status": "no_relevant_match"}
+  ]
+}
