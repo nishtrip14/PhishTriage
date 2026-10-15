@@ -1,0 +1,145 @@
+{
+  "rows_loaded": 7374,
+  "rows_per_source": {
+    "nazario": 1565,
+    "spamassassin": 5809
+  },
+  "original_label_by_source": {
+    "nazario": {
+      "1": 1565
+    },
+    "spamassassin": {
+      "0": 4091,
+      "1": 1718
+    }
+  },
+  "missing_fields_by_source": {
+    "nazario": {
+      "sender": 0,
+      "receiver": 96,
+      "date": 1,
+      "subject": 4,
+      "body": 2
+    },
+    "spamassassin": {
+      "sender": 0,
+      "receiver": 210,
+      "date": 0,
+      "subject": 16,
+      "body": 2
+    }
+  },
+  "empty_combined_text": 0,
+  "exact_duplicates_all_rows": {
+    "rows_in_duplicate_groups": 40,
+    "duplicate_groups": 20,
+    "redundant_copies": 20
+  },
+  "conflicting_duplicate_groups_all_rows": 0,
+  "exclusions": {
+    "spam_not_phishing": 1718,
+    "exact_duplicate_extra_copy": 14
+  },
+  "included_by_class": {
+    "legitimate": 4090,
+    "phishing": 1552
+  },
+  "source_by_class_included": {
+    "legitimate": {
+      "nazario": 0,
+      "spamassassin": 4090
+    },
+    "phishing": {
+      "nazario": 1552,
+      "spamassassin": 0
+    }
+  },
+  "artifact_prevalence_by_class": {
+    "legitimate": {
+      "collector mailbox (monkey.org)": 0.003,
+      "collector name ('jose')": 0.003,
+      "mailing-list footer": 0.612,
+      "SpamAssassin / SourceForge mention": 0.154,
+      "bracketed list tag in subject": 0.381,
+      "literal http(s) link": 0.867
+    },
+    "phishing": {
+      "collector mailbox (monkey.org)": 0.396,
+      "collector name ('jose')": 0.407,
+      "mailing-list footer": 0.039,
+      "SpamAssassin / SourceForge mention": 0.001,
+      "bracketed list tag in subject": 0.028,
+      "literal http(s) link": 0.124
+    }
+  },
+  "year_by_class": {
+    "legitimate": {
+      "count": 4042.0,
+      "min": 2002.0,
+      "5%": 2002.0,
+      "50%": 2002.0,
+      "95%": 2002.0,
+      "max": 2028.0
+    },
+    "phishing": {
+      "count": 1542.0,
+      "min": 2015.0,
+      "5%": 2016.0,
+      "50%": 2018.0,
+      "95%": 2022.0,
+      "max": 2022.0
+    }
+  },
+  "src_url_flag_rate_by_class": {
+    "legitimate": 0.881,
+    "phishing": 0.909
+  },
+  "text_length_chars_by_class": {
+    "legitimate": {
+      "min": 59.0,
+      "5%": 227.0,
+      "50%": 1048.5,
+      "95%": 7020.249999999996,
+      "max": 299273.0
+    },
+    "phishing": {
+      "min": 35.0,
+      "5%": 215.0,
+      "50%": 767.5,
+      "95%": 3485.5999999999985,
+      "max": 4599695.0
+    }
+  },
+  "near_duplicates": {
+    "method": "exact Jaccard on word 5-gram shingles (CRC32), threshold 0.8",
+    "linked_pairs": 274,
+    "groups_total": 5453,
+    "multi_record_groups": 141,
+    "records_in_multi_record_groups": 330,
+    "largest_group": 9,
+    "mixed_label_groups": 0
+  },
+  "splits": {
+    "train": {
+      "records": 3949,
+      "share": 0.6999,
+      "groups": 3818,
+      "legitimate": 2863,
+      "phishing": 1086
+    },
+    "dev": {
+      "records": 846,
+      "share": 0.1499,
+      "groups": 821,
+      "legitimate": 613,
+      "phishing": 233
+    },
+    "test": {
+      "records": 847,
+      "share": 0.1501,
+      "groups": 814,
+      "legitimate": 614,
+      "phishing": 233
+    }
+  }
+}

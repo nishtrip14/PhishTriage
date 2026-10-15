@@ -12,7 +12,10 @@ It runs entirely in **Google Colab**: no local backend, Docker or database serve
    branch `phishtriage-colab` or `main`).
 2. *Runtime → Run all*.
 
-Datasets are downloaded at runtime and are never committed.
+Data is downloaded at runtime from Zenodo, checked against a pinned checksum, and never committed:
+Nazario phishing vs SpamAssassin legitimate mail, from the *Phishing Email Curated Datasets* record
+(10.5281/zenodo.8339691, CC-BY-4.0). See [docs/DATASET_CARD.md](docs/DATASET_CARD.md) for provenance,
+label mapping, audit counts and known confounds.
 
 ## Repository layout
 
