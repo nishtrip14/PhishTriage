@@ -280,6 +280,11 @@ def validate_draft(draft: dict, ctx: "_Context") -> list[dict]:
                 add("action_cites_uncited_playbook", f"action {i} refers to {d}, which is not a valid playbook_ref")
         if _SAFETY_OVERCLAIM.search(a["action"]):
             add("safety_overclaim", f"action {i} claims safety or certainty")
+    label = (ctx.classifier or {}).get("predicted_label")
+    if (label == "phishing" and draft["assessment"] == "no_strong_indicators") or (
+            label == "legitimate" and draft["assessment"] == "suspicious"):
+        add("assessment_classifier_disagreement", f"agent assessment '{draft['assessment']}' disagrees with the "
+            f"classifier label '{label}'; both are kept separately for a human to weigh", severity="warning")
     if draft["assessment"] == "suspicious" and not any(f["evidence_ids"] for f in draft["findings"]):
         add("suspicious_without_findings", "a suspicious assessment needs at least one cited finding")
     return issues
@@ -636,8 +641,9 @@ def format_report(report: TriageReport) -> str:
     lines.append(f"STATUS: {r.status.upper()}   (termination: {r.termination_reason})")
     c = r.classifier or {}
     score = "n/a" if c.get("score") is None else f"{c['score']:.3f}"
+    thr = "n/a" if c.get("threshold") is None else f"{c['threshold']:.3f}"
     lines.append(f"Classifier [{c.get('model_id')}]: {c.get('predicted_label')} | score {score} "
-                 f"({c.get('score_type')}, threshold {c.get('threshold')})")
+                 f"({c.get('score_type')}, threshold {thr})")
     lines.append(f"Agent assessment: {r.assessment or 'none'}" + (f"  ({r.assessment_note})" if r.assessment_note else ""))
     if r.findings:
         lines.append("Findings:")

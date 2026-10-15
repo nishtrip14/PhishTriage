@@ -348,3 +348,15 @@ def test_live_adapter_requires_a_passed_preflight(monkeypatch, no_network):
     monkeypatch.setattr(P, "get_api_key", lambda: None)
     adapter, reason = A.make_live_adapter({"status": "ok", "model": "gemini-x"})
     assert adapter is None and "GEMINI_API_KEY" in reason
+
+
+def test_assessment_classifier_disagreement_is_surfaced_not_hidden(tools):
+    def benign(req):
+        return text(AR.draft("no_strong_indicators", [AR.finding(
+            "Credential-request wording was observed but judged weak.", AR.evidence_ids(req, "credential_request_language"))], []))
+    res, _ = run(tools, "case-credential_link", inspect_then_ready() + [benign, AR.approve()])
+    r = res.report
+    warn = [i for i in r.review["validation_issues"] if i["code"] == "assessment_classifier_disagreement"]
+    assert warn and warn[0]["severity"] == "warning"
+    assert r.status == "approved" and r.classifier["predicted_label"] == "phishing"     # kept separately
+    assert "assessment_classifier_disagreement" in A.format_report(r)
