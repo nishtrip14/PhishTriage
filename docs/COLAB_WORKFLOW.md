@@ -39,6 +39,13 @@ if the repository is private.
    If `--ff-only` fails, local and Colab work have diverged. Don't force-push.
    Inspect the difference with `git log --oneline --graph --all`, then merge by hand.
 
+## Handing a Colab run back for verification
+1. In Colab: *File → Download → Download .ipynb* after the run.
+2. Put the file in `colab_import/` in the repository. That folder is git-ignored, because executed outputs can
+   contain personal data.
+3. Its source cells are compared with the canonical notebook, and its outputs are checked for secrets and
+   personal data. Only then are results recorded in `COLAB_STATUS.md`, or a sanitized copy saved to `reports/`.
+
 ## Producing the demonstration copy
 1. In Colab: *Runtime → Restart and run all* on the canonical notebook.
 2. Check that the outputs contain no secrets, tokens, personal email contents or absolute Drive paths.

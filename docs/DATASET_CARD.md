@@ -90,7 +90,14 @@ These were measured on the included rows. Treat them as threats to validity in t
    converted from HTML with their link targets removed, which is why few contain literal links. URL-based features
    cannot be derived from this data.
 5. **Small and imbalanced.** There are 1,552 phishing records. One phishing text is about 4.6 M characters long.
-6. **Identifying information.** The text contains real names and addresses from public corpora. Displayed examples
+6. **Grouping is not de-confounding.** Grouped splitting keeps duplicate and near-duplicate messages within one
+   split. It does not remove the source–label confound, because every split has Nazario-only phishing and
+   SpamAssassin-only legitimate mail. Leave-one-source-out evaluation is meaningless here, since each source has
+   one class. In phase 2, removing the known artifacts barely changed the scores, and residual cues remained
+   (`utf`, `url`, mailing-list topics). See `docs/MODEL_EVALUATION.md`.
+7. **Label noise.** At least one Nazario "phishing" record is a mailbox-format pseudo-message ("DON'T DELETE THIS
+   MESSAGE -- FOLDER INTERNAL DATA"), not a phishing email.
+8. **Identifying information.** The text contains real names and addresses from public corpora. Displayed examples
    are redacted (emails, URLs, IP addresses, numbers, reply attributions, and From/To/Cc headers), but the
    redaction is heuristic. The executed report must be checked by a person before it is published.
 

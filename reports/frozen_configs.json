@@ -1,0 +1,202 @@
+{
+  "tfidf_logreg__original": {
+    "model_id": "tfidf_logreg__original",
+    "kind": "tfidf_logreg",
+    "variant": "original",
+    "params": {
+      "C": 10.0
+    },
+    "threshold": 0.5498816826190059,
+    "dev_f1_at_threshold": 0.9978494623655914,
+    "dev_average_precision": 0.9999454426420309,
+    "selection_metric": "dev average precision (phishing)",
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "grid": [
+      {
+        "params": {
+          "C": 0.1
+        },
+        "dev_average_precision": 0.999783191780684,
+        "fit_seconds": 1.153
+      },
+      {
+        "params": {
+          "C": 1.0
+        },
+        "dev_average_precision": 0.9999098351787066,
+        "fit_seconds": 1.167
+      },
+      {
+        "params": {
+          "C": 10.0
+        },
+        "dev_average_precision": 0.9999454426420309,
+        "fit_seconds": 1.179
+      }
+    ]
+  },
+  "tfidf_mnb__original": {
+    "model_id": "tfidf_mnb__original",
+    "kind": "tfidf_mnb",
+    "variant": "original",
+    "params": {
+      "alpha": 0.1,
+      "fit_prior": true
+    },
+    "threshold": 0.40862969778602787,
+    "dev_f1_at_threshold": 1.0,
+    "dev_average_precision": 0.9999999999999999,
+    "selection_metric": "dev average precision (phishing)",
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "grid": [
+      {
+        "params": {
+          "alpha": 0.01,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9999816587799419,
+        "fit_seconds": 1.207
+      },
+      {
+        "params": {
+          "alpha": 0.01,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.999981658779942,
+        "fit_seconds": 1.129
+      },
+      {
+        "params": {
+          "alpha": 0.1,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9999999999999999,
+        "fit_seconds": 1.109
+      },
+      {
+        "params": {
+          "alpha": 0.1,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.9999999999999999,
+        "fit_seconds": 1.125
+      },
+      {
+        "params": {
+          "alpha": 1.0,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9999454426420309,
+        "fit_seconds": 1.159
+      },
+      {
+        "params": {
+          "alpha": 1.0,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.9999454426420309,
+        "fit_seconds": 1.1
+      }
+    ]
+  },
+  "tfidf_logreg__artifact_normalized": {
+    "model_id": "tfidf_logreg__artifact_normalized",
+    "kind": "tfidf_logreg",
+    "variant": "artifact_normalized",
+    "params": {
+      "C": 10.0
+    },
+    "threshold": 0.2606388599527775,
+    "dev_f1_at_threshold": 0.9892933618843683,
+    "dev_average_precision": 0.999622153054289,
+    "selection_metric": "dev average precision (phishing)",
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "grid": [
+      {
+        "params": {
+          "C": 0.1
+        },
+        "dev_average_precision": 0.998608614877554,
+        "fit_seconds": 1.621
+      },
+      {
+        "params": {
+          "C": 1.0
+        },
+        "dev_average_precision": 0.9993089000816451,
+        "fit_seconds": 1.617
+      },
+      {
+        "params": {
+          "C": 10.0
+        },
+        "dev_average_precision": 0.999622153054289,
+        "fit_seconds": 1.623
+      }
+    ]
+  },
+  "tfidf_mnb__artifact_normalized": {
+    "model_id": "tfidf_mnb__artifact_normalized",
+    "kind": "tfidf_mnb",
+    "variant": "artifact_normalized",
+    "params": {
+      "alpha": 0.1,
+      "fit_prior": true
+    },
+    "threshold": 0.928540015624751,
+    "dev_f1_at_threshold": 0.9869565217391305,
+    "dev_average_precision": 0.9986300319712971,
+    "selection_metric": "dev average precision (phishing)",
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "grid": [
+      {
+        "params": {
+          "alpha": 0.01,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9976474243815058,
+        "fit_seconds": 1.676
+      },
+      {
+        "params": {
+          "alpha": 0.01,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.9976474243815058,
+        "fit_seconds": 1.663
+      },
+      {
+        "params": {
+          "alpha": 0.1,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9986300319712971,
+        "fit_seconds": 1.585
+      },
+      {
+        "params": {
+          "alpha": 0.1,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.9986300319712971,
+        "fit_seconds": 1.982
+      },
+      {
+        "params": {
+          "alpha": 1.0,
+          "fit_prior": true
+        },
+        "dev_average_precision": 0.9962874561203868,
+        "fit_seconds": 1.62
+      },
+      {
+        "params": {
+          "alpha": 1.0,
+          "fit_prior": false
+        },
+        "dev_average_precision": 0.9962874561203868,
+        "fit_seconds": 1.748
+      }
+    ]
+  }
+}

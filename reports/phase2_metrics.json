@@ -1,0 +1,1020 @@
+{
+  "environment": "local",
+  "cpu_count": 10,
+  "platform": "macOS-27.0.1",
+  "versions": {
+    "python": "3.13.7",
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pandas": "3.0.6",
+    "joblib": "1.6.0",
+    "phishtriage": "0.2.0"
+  },
+  "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+  "code_modified": false,
+  "run_at_utc": "2026-10-15T13:14:33Z",
+  "dataset": {
+    "record": "https://zenodo.org/records/8339691",
+    "doi": "10.5281/zenodo.8339691",
+    "file_sha256": {
+      "nazario": "b8fbc4158fbdfaff1ed98584c43d72e283c6352d7ade4d457d34c1d79488d184",
+      "spamassassin": "3bfe8f8abff89f69a98456be50413c2fcb20a476141116dd84ee1507b980c00e"
+    },
+    "split_manifest_sha256": "dd51c8e6939e9937f2b41edf0aad95312070d4c20d4f57ef5ddbc67e819df880",
+    "seed": 42,
+    "frozen_configs_sha256": "a2395a44f6178a2630dea5cb75b09f9a94b0209cc75e0adcbfedb918d33e7c9c",
+    "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+    "code_modified": false
+  },
+  "protocol": {
+    "fit_on": "train",
+    "selection": "dev average precision (phishing)",
+    "threshold": "threshold maximizing phishing F1 on dev",
+    "test_evaluations_per_config": 1,
+    "calibration": "none (no separate calibration partition)",
+    "primary_model_predeclared": "tfidf_logreg__artifact_normalized",
+    "tfidf": {
+      "lowercase": "True",
+      "ngram_range": "(1, 2)",
+      "min_df": "2",
+      "max_df": "0.95",
+      "max_features": "50000",
+      "sublinear_tf": "True",
+      "dtype": "<class 'numpy.float32'>"
+    },
+    "grids": {
+      "tfidf_logreg": [
+        {
+          "C": 0.1
+        },
+        {
+          "C": 1.0
+        },
+        {
+          "C": 10.0
+        }
+      ],
+      "tfidf_mnb": [
+        {
+          "alpha": 0.01,
+          "fit_prior": true
+        },
+        {
+          "alpha": 0.01,
+          "fit_prior": false
+        },
+        {
+          "alpha": 0.1,
+          "fit_prior": true
+        },
+        {
+          "alpha": 0.1,
+          "fit_prior": false
+        },
+        {
+          "alpha": 1.0,
+          "fit_prior": true
+        },
+        {
+          "alpha": 1.0,
+          "fit_prior": false
+        }
+      ]
+    }
+  },
+  "length_policy": {
+    "max_input_chars": 20000,
+    "rule": "keep the first max_input_chars characters; flag as truncated; same in training and inference",
+    "train_p99_5_chars": 19894.519999999953,
+    "truncated_by_split_and_class": {
+      "train": {
+        "legitimate": 19,
+        "phishing": 1
+      },
+      "dev": {
+        "legitimate": 4,
+        "phishing": 0
+      },
+      "test": {
+        "legitimate": 5,
+        "phishing": 1
+      }
+    },
+    "truncated_total": 30
+  },
+  "artifact_normalization": {
+    "rules_version": "1.0",
+    "rules": [
+      "drop lines containing mailing-list footer phrases (listinfo, unsubscribe, mailman, list maintainer, sponsored by, Yahoo! Groups, egroups, subscription notices, 'date: not supplied')",
+      "drop separator lines made only of punctuation",
+      "drop a bracketed list tag at the start of a line, e.g. '[ILUG]' (keeps a 'Re:' prefix)",
+      "remove email addresses",
+      "remove visible URLs (http/https/ftp/www)",
+      "remove bare domain names with common TLDs",
+      "remove collection-identifying terms: jose, monkey, spamassassin, sourceforge, sf.net",
+      "remove four-digit years 1980-2029"
+    ],
+    "artifact_prevalence_train_dev": {
+      "collector mailbox (monkey.org)": {
+        "legitimate before": 0.003,
+        "legitimate after": 0.0,
+        "phishing before": 0.396,
+        "phishing after": 0.001
+      },
+      "collector name ('jose')": {
+        "legitimate before": 0.003,
+        "legitimate after": 0.0,
+        "phishing before": 0.409,
+        "phishing after": 0.0
+      },
+      "mailing-list footer": {
+        "legitimate before": 0.608,
+        "legitimate after": 0.0,
+        "phishing before": 0.039,
+        "phishing after": 0.0
+      },
+      "SpamAssassin / SourceForge mention": {
+        "legitimate before": 0.151,
+        "legitimate after": 0.002,
+        "phishing before": 0.001,
+        "phishing after": 0.0
+      },
+      "bracketed list tag in subject": {
+        "legitimate before": 0.383,
+        "legitimate after": 0.013,
+        "phishing before": 0.032,
+        "phishing after": 0.001
+      },
+      "literal http(s) link": {
+        "legitimate before": 0.865,
+        "legitimate after": 0.0,
+        "phishing before": 0.118,
+        "phishing after": 0.004
+      },
+      "four-digit year 1980-2029": {
+        "legitimate before": 0.562,
+        "legitimate after": 0.0,
+        "phishing before": 0.487,
+        "phishing after": 0.002
+      }
+    },
+    "empty_after_normalization_by_split_and_class": {
+      "train": {
+        "legitimate": 3,
+        "phishing": 0
+      },
+      "dev": {
+        "legitimate": 1,
+        "phishing": 0
+      },
+      "test": {
+        "legitimate": 1,
+        "phishing": 0
+      }
+    },
+    "median_share_of_characters_removed_train_dev": {
+      "legitimate": 0.273,
+      "phishing": 0.077
+    }
+  },
+  "frozen_configs": {
+    "tfidf_logreg__original": {
+      "model_id": "tfidf_logreg__original",
+      "kind": "tfidf_logreg",
+      "variant": "original",
+      "params": {
+        "C": 10.0
+      },
+      "threshold": 0.5498816826190059,
+      "dev_f1_at_threshold": 0.9978494623655914,
+      "dev_average_precision": 0.9999454426420309,
+      "selection_metric": "dev average precision (phishing)",
+      "threshold_rule": "threshold maximizing phishing F1 on dev",
+      "grid": [
+        {
+          "params": {
+            "C": 0.1
+          },
+          "dev_average_precision": 0.999783191780684,
+          "fit_seconds": 1.153
+        },
+        {
+          "params": {
+            "C": 1.0
+          },
+          "dev_average_precision": 0.9999098351787066,
+          "fit_seconds": 1.167
+        },
+        {
+          "params": {
+            "C": 10.0
+          },
+          "dev_average_precision": 0.9999454426420309,
+          "fit_seconds": 1.179
+        }
+      ]
+    },
+    "tfidf_mnb__original": {
+      "model_id": "tfidf_mnb__original",
+      "kind": "tfidf_mnb",
+      "variant": "original",
+      "params": {
+        "alpha": 0.1,
+        "fit_prior": true
+      },
+      "threshold": 0.40862969778602787,
+      "dev_f1_at_threshold": 1.0,
+      "dev_average_precision": 0.9999999999999999,
+      "selection_metric": "dev average precision (phishing)",
+      "threshold_rule": "threshold maximizing phishing F1 on dev",
+      "grid": [
+        {
+          "params": {
+            "alpha": 0.01,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9999816587799419,
+          "fit_seconds": 1.207
+        },
+        {
+          "params": {
+            "alpha": 0.01,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.999981658779942,
+          "fit_seconds": 1.129
+        },
+        {
+          "params": {
+            "alpha": 0.1,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9999999999999999,
+          "fit_seconds": 1.109
+        },
+        {
+          "params": {
+            "alpha": 0.1,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.9999999999999999,
+          "fit_seconds": 1.125
+        },
+        {
+          "params": {
+            "alpha": 1.0,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9999454426420309,
+          "fit_seconds": 1.159
+        },
+        {
+          "params": {
+            "alpha": 1.0,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.9999454426420309,
+          "fit_seconds": 1.1
+        }
+      ]
+    },
+    "tfidf_logreg__artifact_normalized": {
+      "model_id": "tfidf_logreg__artifact_normalized",
+      "kind": "tfidf_logreg",
+      "variant": "artifact_normalized",
+      "params": {
+        "C": 10.0
+      },
+      "threshold": 0.2606388599527775,
+      "dev_f1_at_threshold": 0.9892933618843683,
+      "dev_average_precision": 0.999622153054289,
+      "selection_metric": "dev average precision (phishing)",
+      "threshold_rule": "threshold maximizing phishing F1 on dev",
+      "grid": [
+        {
+          "params": {
+            "C": 0.1
+          },
+          "dev_average_precision": 0.998608614877554,
+          "fit_seconds": 1.621
+        },
+        {
+          "params": {
+            "C": 1.0
+          },
+          "dev_average_precision": 0.9993089000816451,
+          "fit_seconds": 1.617
+        },
+        {
+          "params": {
+            "C": 10.0
+          },
+          "dev_average_precision": 0.999622153054289,
+          "fit_seconds": 1.623
+        }
+      ]
+    },
+    "tfidf_mnb__artifact_normalized": {
+      "model_id": "tfidf_mnb__artifact_normalized",
+      "kind": "tfidf_mnb",
+      "variant": "artifact_normalized",
+      "params": {
+        "alpha": 0.1,
+        "fit_prior": true
+      },
+      "threshold": 0.928540015624751,
+      "dev_f1_at_threshold": 0.9869565217391305,
+      "dev_average_precision": 0.9986300319712971,
+      "selection_metric": "dev average precision (phishing)",
+      "threshold_rule": "threshold maximizing phishing F1 on dev",
+      "grid": [
+        {
+          "params": {
+            "alpha": 0.01,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9976474243815058,
+          "fit_seconds": 1.676
+        },
+        {
+          "params": {
+            "alpha": 0.01,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.9976474243815058,
+          "fit_seconds": 1.663
+        },
+        {
+          "params": {
+            "alpha": 0.1,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9986300319712971,
+          "fit_seconds": 1.585
+        },
+        {
+          "params": {
+            "alpha": 0.1,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.9986300319712971,
+          "fit_seconds": 1.982
+        },
+        {
+          "params": {
+            "alpha": 1.0,
+            "fit_prior": true
+          },
+          "dev_average_precision": 0.9962874561203868,
+          "fit_seconds": 1.62
+        },
+        {
+          "params": {
+            "alpha": 1.0,
+            "fit_prior": false
+          },
+          "dev_average_precision": 0.9962874561203868,
+          "fit_seconds": 1.748
+        }
+      ]
+    }
+  },
+  "results": {
+    "tfidf_logreg__original": {
+      "train_records": 3949,
+      "fit_seconds": 1.477,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.5498816826190059,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9957081545064378,
+        "f1_phishing": 0.9978494623655914,
+        "macro_f1": 0.9985172332202855,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9999454426420309,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 1,
+          "tp": 232
+        },
+        "inference_seconds": 0.1254,
+        "inference_ms_per_email": 0.1482
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.5498816826190059,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9828326180257511,
+        "f1_phishing": 0.9913419913419913,
+        "macro_f1": 0.9940476190476191,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.999473753435143,
+        "confusion_matrix": {
+          "tn": 614,
+          "fp": 0,
+          "fn": 4,
+          "tp": 229
+        },
+        "inference_seconds": 0.1246,
+        "inference_ms_per_email": 0.1471
+      }
+    },
+    "tfidf_mnb__original": {
+      "train_records": 3949,
+      "fit_seconds": 1.346,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.40862969778602787,
+        "precision_phishing": 1.0,
+        "recall_phishing": 1.0,
+        "f1_phishing": 1.0,
+        "macro_f1": 1.0,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9999999999999999,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 0,
+          "tp": 233
+        },
+        "inference_seconds": 0.109,
+        "inference_ms_per_email": 0.1288
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.40862969778602787,
+        "precision_phishing": 0.9871794871794872,
+        "recall_phishing": 0.9914163090128756,
+        "f1_phishing": 0.9892933618843683,
+        "macro_f1": 0.9926091911296333,
+        "false_positive_rate": 0.004885993485342019,
+        "average_precision": 0.9973059920939416,
+        "confusion_matrix": {
+          "tn": 611,
+          "fp": 3,
+          "fn": 2,
+          "tp": 231
+        },
+        "inference_seconds": 0.1166,
+        "inference_ms_per_email": 0.1377
+      }
+    },
+    "tfidf_logreg__artifact_normalized": {
+      "train_records": 3949,
+      "fit_seconds": 1.792,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.2606388599527775,
+        "precision_phishing": 0.9871794871794872,
+        "recall_phishing": 0.9914163090128756,
+        "f1_phishing": 0.9892933618843683,
+        "macro_f1": 0.9926058646156535,
+        "false_positive_rate": 0.004893964110929853,
+        "average_precision": 0.999622153054289,
+        "confusion_matrix": {
+          "tn": 610,
+          "fp": 3,
+          "fn": 2,
+          "tp": 231
+        },
+        "inference_seconds": 0.2431,
+        "inference_ms_per_email": 0.2874
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.2606388599527775,
+        "precision_phishing": 0.9831223628691983,
+        "recall_phishing": 1.0,
+        "f1_phishing": 0.9914893617021276,
+        "macro_f1": 0.9941106939229593,
+        "false_positive_rate": 0.006514657980456026,
+        "average_precision": 0.9997965488769086,
+        "confusion_matrix": {
+          "tn": 610,
+          "fp": 4,
+          "fn": 0,
+          "tp": 233
+        },
+        "inference_seconds": 0.2584,
+        "inference_ms_per_email": 0.3051
+      }
+    },
+    "tfidf_mnb__artifact_normalized": {
+      "train_records": 3949,
+      "fit_seconds": 1.659,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.928540015624751,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9742489270386266,
+        "f1_phishing": 0.9869565217391304,
+        "macro_f1": 0.9910431959345003,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9986300319712971,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 6,
+          "tp": 227
+        },
+        "inference_seconds": 0.249,
+        "inference_ms_per_email": 0.2943
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.928540015624751,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9570815450643777,
+        "f1_phishing": 0.9780701754385965,
+        "macro_f1": 0.984996315506051,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.999871283754747,
+        "confusion_matrix": {
+          "tn": 614,
+          "fp": 0,
+          "fn": 10,
+          "tp": 223
+        },
+        "inference_seconds": 0.251,
+        "inference_ms_per_email": 0.2963
+      }
+    }
+  },
+  "influential_terms": {
+    "tfidf_logreg__original": {
+      "phishing": {
+        "terms": [
+          {
+            "term": "your",
+            "coef": 7.549,
+            "artifact": false
+          },
+          {
+            "term": "account",
+            "coef": 6.8978,
+            "artifact": false
+          },
+          {
+            "term": "jose",
+            "coef": 4.8758,
+            "artifact": true
+          },
+          {
+            "term": "monkey",
+            "coef": 4.7685,
+            "artifact": true
+          },
+          {
+            "term": "your account",
+            "coef": 4.7453,
+            "artifact": false
+          },
+          {
+            "term": "monkey org",
+            "coef": 4.6243,
+            "artifact": true
+          },
+          {
+            "term": "please",
+            "coef": 4.1781,
+            "artifact": false
+          },
+          {
+            "term": "jose monkey",
+            "coef": 4.0548,
+            "artifact": true
+          },
+          {
+            "term": "dear",
+            "coef": 3.967,
+            "artifact": false
+          },
+          {
+            "term": "utf",
+            "coef": 3.9537,
+            "artifact": false
+          },
+          {
+            "term": "update",
+            "coef": 3.9065,
+            "artifact": false
+          },
+          {
+            "term": "email",
+            "coef": 3.3751,
+            "artifact": false
+          },
+          {
+            "term": "payment",
+            "coef": 3.3335,
+            "artifact": false
+          },
+          {
+            "term": "view",
+            "coef": 3.1251,
+            "artifact": false
+          },
+          {
+            "term": "below",
+            "coef": 3.074,
+            "artifact": false
+          },
+          {
+            "term": "usaa",
+            "coef": 2.9331,
+            "artifact": false
+          },
+          {
+            "term": "document",
+            "coef": 2.7995,
+            "artifact": false
+          },
+          {
+            "term": "de",
+            "coef": 2.7901,
+            "artifact": false
+          },
+          {
+            "term": "our",
+            "coef": 2.6843,
+            "artifact": false
+          },
+          {
+            "term": "attached",
+            "coef": 2.6308,
+            "artifact": false
+          }
+        ],
+        "artifact_share": 0.2
+      },
+      "legitimate": {
+        "terms": [
+          {
+            "term": "http",
+            "coef": -5.6251,
+            "artifact": true
+          },
+          {
+            "term": "2002",
+            "coef": -4.5887,
+            "artifact": true
+          },
+          {
+            "term": "http www",
+            "coef": -4.3839,
+            "artifact": true
+          },
+          {
+            "term": "com",
+            "coef": -3.9084,
+            "artifact": true
+          },
+          {
+            "term": "the",
+            "coef": -3.7716,
+            "artifact": false
+          },
+          {
+            "term": "www",
+            "coef": -3.7693,
+            "artifact": true
+          },
+          {
+            "term": "that",
+            "coef": -3.3239,
+            "artifact": false
+          },
+          {
+            "term": "it",
+            "coef": -3.2754,
+            "artifact": false
+          },
+          {
+            "term": "list",
+            "coef": -3.1089,
+            "artifact": true
+          },
+          {
+            "term": "but",
+            "coef": -2.8488,
+            "artifact": false
+          },
+          {
+            "term": "net",
+            "coef": -2.7951,
+            "artifact": true
+          },
+          {
+            "term": "mailman",
+            "coef": -2.7063,
+            "artifact": true
+          },
+          {
+            "term": "of",
+            "coef": -2.7062,
+            "artifact": false
+          },
+          {
+            "term": "they",
+            "coef": -2.6959,
+            "artifact": false
+          },
+          {
+            "term": "listinfo",
+            "coef": -2.6731,
+            "artifact": true
+          },
+          {
+            "term": "re",
+            "coef": -2.6533,
+            "artifact": false
+          },
+          {
+            "term": "wrote",
+            "coef": -2.6137,
+            "artifact": false
+          },
+          {
+            "term": "mailman listinfo",
+            "coef": -2.5681,
+            "artifact": true
+          },
+          {
+            "term": "url http",
+            "coef": -2.5437,
+            "artifact": true
+          },
+          {
+            "term": "url",
+            "coef": -2.4478,
+            "artifact": false
+          }
+        ],
+        "artifact_share": 0.55
+      }
+    },
+    "tfidf_logreg__artifact_normalized": {
+      "phishing": {
+        "terms": [
+          {
+            "term": "your",
+            "coef": 10.5924,
+            "artifact": false
+          },
+          {
+            "term": "account",
+            "coef": 8.4813,
+            "artifact": false
+          },
+          {
+            "term": "utf",
+            "coef": 7.0604,
+            "artifact": false
+          },
+          {
+            "term": "email",
+            "coef": 6.0343,
+            "artifact": false
+          },
+          {
+            "term": "payment",
+            "coef": 5.1874,
+            "artifact": false
+          },
+          {
+            "term": "your account",
+            "coef": 5.0039,
+            "artifact": false
+          },
+          {
+            "term": "please",
+            "coef": 4.9063,
+            "artifact": false
+          },
+          {
+            "term": "dear",
+            "coef": 4.7691,
+            "artifact": false
+          },
+          {
+            "term": "you",
+            "coef": 4.4927,
+            "artifact": false
+          },
+          {
+            "term": "below",
+            "coef": 4.4389,
+            "artifact": false
+          },
+          {
+            "term": "de",
+            "coef": 4.3057,
+            "artifact": false
+          },
+          {
+            "term": "update",
+            "coef": 4.2223,
+            "artifact": false
+          },
+          {
+            "term": "incoming",
+            "coef": 4.1353,
+            "artifact": false
+          },
+          {
+            "term": "password",
+            "coef": 4.1171,
+            "artifact": false
+          },
+          {
+            "term": "click",
+            "coef": 4.1021,
+            "artifact": false
+          },
+          {
+            "term": "mailbox",
+            "coef": 3.8138,
+            "artifact": false
+          },
+          {
+            "term": "document",
+            "coef": 3.8075,
+            "artifact": false
+          },
+          {
+            "term": "important",
+            "coef": 3.793,
+            "artifact": false
+          },
+          {
+            "term": "security",
+            "coef": 3.671,
+            "artifact": false
+          },
+          {
+            "term": "alert",
+            "coef": 3.5465,
+            "artifact": false
+          }
+        ],
+        "artifact_share": 0.0
+      },
+      "legitimate": {
+        "terms": [
+          {
+            "term": "url",
+            "coef": -4.9433,
+            "artifact": false
+          },
+          {
+            "term": "the",
+            "coef": -4.0463,
+            "artifact": false
+          },
+          {
+            "term": "that",
+            "coef": -3.1645,
+            "artifact": false
+          },
+          {
+            "term": "apt",
+            "coef": -2.9644,
+            "artifact": false
+          },
+          {
+            "term": "it",
+            "coef": -2.9542,
+            "artifact": false
+          },
+          {
+            "term": "my",
+            "coef": -2.9276,
+            "artifact": false
+          },
+          {
+            "term": "url date",
+            "coef": -2.8648,
+            "artifact": false
+          },
+          {
+            "term": "linux",
+            "coef": -2.8442,
+            "artifact": true
+          },
+          {
+            "term": "but",
+            "coef": -2.6727,
+            "artifact": false
+          },
+          {
+            "term": "of",
+            "coef": -2.6651,
+            "artifact": false
+          },
+          {
+            "term": "they",
+            "coef": -2.6226,
+            "artifact": false
+          },
+          {
+            "term": "wrote",
+            "coef": -2.5302,
+            "artifact": false
+          },
+          {
+            "term": "at",
+            "coef": -2.3979,
+            "artifact": false
+          },
+          {
+            "term": "how",
+            "coef": -2.1861,
+            "artifact": false
+          },
+          {
+            "term": "cvs",
+            "coef": -2.1314,
+            "artifact": false
+          },
+          {
+            "term": "irish",
+            "coef": -2.0148,
+            "artifact": false
+          },
+          {
+            "term": "there",
+            "coef": -2.0054,
+            "artifact": false
+          },
+          {
+            "term": "razor",
+            "coef": -1.9662,
+            "artifact": true
+          },
+          {
+            "term": "site",
+            "coef": -1.9434,
+            "artifact": false
+          },
+          {
+            "term": "01 00",
+            "coef": -1.9418,
+            "artifact": false
+          }
+        ],
+        "artifact_share": 0.1
+      }
+    }
+  },
+  "error_counts": {
+    "tfidf_logreg__original": {
+      "false_positives": 0,
+      "false_negatives": 4,
+      "errors_truncated_input": 1
+    },
+    "tfidf_logreg__artifact_normalized": {
+      "false_positives": 4,
+      "false_negatives": 0,
+      "errors_truncated_input": 0
+    }
+  },
+  "external_validation": "pending: no independent licensed phishing+legitimate corpus found on 2026-10-15"
+}

@@ -12,6 +12,9 @@ bottom in Google-hosted Colab by **19 Oct 2026**.
 - Never commit secrets, `.env`, API keys, raw datasets, or large model files (see `.gitignore`).
   In Colab, read secrets via `google.colab.userdata`, not hard-coded strings.
 - Commit the canonical notebook with outputs **cleared**, to keep diffs reviewable.
+- Reusable logic lives in the `phishtriage/` package (data, text, models, inference); the notebook imports it.
+  In Colab, section 0 clones the public repo's `phishtriage-colab` branch to get it.
+- Scope is agentic (see the `COLAB_STATUS.md` plan): the classifier is one evidence tool, not the whole deliverable.
 
 ## Git
 - Branches: `main` (stable), `phishtriage-colab` (development). Merge to `main` only when a phase works in Colab.
@@ -30,15 +33,18 @@ jupyter nbconvert --clear-output --inplace notebooks/PhishTriage_Colab.ipynb
 Both commands were verified locally on 2026-10-15 (Python 3.13.7, Homebrew jupyter).
 
 ```bash
-# Execute the notebook locally (needs a venv with numpy pandas scipy matplotlib requests nbconvert ipykernel).
+# Offline test suite (needs pytest, scikit-learn, pandas, scipy, requests, joblib)
+python -m pytest -q -p no:cacheprovider tests
+
+# Execute the notebook locally (also needs matplotlib, pyarrow, nbconvert, ipykernel).
 # Raw data goes to PHISHTRIAGE_WORKDIR (default ~/.cache/phishtriage), never into the repo.
 # PHISHTRIAGE_EXPORT_DIR refreshes the small evidence files in reports/. It must be an absolute path,
 # because the kernel runs from notebooks/.
 PHISHTRIAGE_EXPORT_DIR="$PWD/reports" jupyter nbconvert --to notebook --execute \
-  --ExecutePreprocessor.timeout=900 --output-dir "$HOME/.cache/phishtriage-exec" notebooks/PhishTriage_Colab.ipynb
+  --ExecutePreprocessor.timeout=1800 --output-dir "$HOME/.cache/phishtriage-exec" notebooks/PhishTriage_Colab.ipynb
 ```
-Verified on 2026-10-15 with these flags in a venv (pandas 3.0.6, scipy 1.18.1), using scratch directories for
-the workdir and output. Write the executed copy outside the repository and keep the canonical notebook cleared.
+Both were verified on 2026-10-15 in a venv (pandas 3.0.6, scikit-learn 1.9.1), with scratch directories for the
+workdir and output. If you execute a *copy* of the notebook from outside the repo, set `PHISHTRIAGE_REPO`. Write the executed copy outside the repository and keep the canonical notebook cleared.
 Mark a new command as verified only after running it.
 
 ## Data rules
@@ -46,6 +52,11 @@ Mark a new command as verified only after running it.
   Never relabel generic spam as phishing.
 - The model input is the `text` column only. Source, labels, IDs, dates and the URL flag are never features.
 - Fit any learned preprocessing on `train` only. The splits are fixed by `reports/split_manifest.csv` (seed 42).
+- Choose parameters, thresholds and normalization rules on dev only. Freeze them before test; never retune after
+  seeing test results. Record a rule change as a new `PREPROCESSING_VERSION`.
+- Never describe test scores as real-world accuracy: source = label in this dataset (`docs/MODEL_EVALUATION.md`).
+- Model artifacts (`model.joblib` + `manifest.json`) stay outside Git; load them only via `inference.load_artifact`,
+  which verifies the SHA-256 before unpickling.
 
 ## Status tracking
 Update `COLAB_STATUS.md` after each phase, with evidence (a commit hash, a Colab run date, metrics).

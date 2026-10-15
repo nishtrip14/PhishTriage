@@ -24,7 +24,7 @@
         "urls",
         "label"
       ],
-      "checked_at_utc": "2026-10-15T12:38:55Z"
+      "checked_at_utc": "2026-10-15T13:13:49Z"
     },
     "spamassassin": {
       "file": "SpamAssasin.csv",
@@ -45,7 +45,7 @@
         "label",
         "urls"
       ],
-      "checked_at_utc": "2026-10-15T12:38:55Z"
+      "checked_at_utc": "2026-10-15T13:13:49Z"
     }
   },
   "label_mapping": [
@@ -77,6 +77,8 @@
   ],
   "seed": 42,
   "environment": "local",
+  "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+  "code_modified": false,
   "versions": {
     "numpy": "2.5.4",
     "pandas": "3.0.6",

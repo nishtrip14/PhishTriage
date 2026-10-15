@@ -26,6 +26,8 @@ data/interim/
 *.7z
 
 # --- Temporary Colab downloads & scratch -----------------------------------
+# Executed notebooks downloaded from Colab land here unsanitized; only reviewed copies go to reports/.
+colab_import/
 sample_data/
 /content/
 tmp/

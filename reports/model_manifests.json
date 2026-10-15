@@ -1,0 +1,368 @@
+{
+  "tfidf_logreg__original": {
+    "model_id": "tfidf_logreg__original",
+    "kind": "tfidf_logreg",
+    "variant": "original",
+    "params": {
+      "C": 10.0
+    },
+    "threshold": 0.5498816826190059,
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "selection_metric": "dev average precision (phishing)",
+    "score_type": "model_estimated_probability_uncalibrated",
+    "preprocessing_version": "2.0",
+    "artifact_rules_version": "1.0",
+    "max_input_chars": 20000,
+    "trained_on": "train split only",
+    "model_file": "model.joblib",
+    "model_sha256": "5573f064e5fac7c98db6c8cbccde71c9a625ea97ee6cd8406ea44d9e44966ff2",
+    "versions": {
+      "python": "3.13.7",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "phishtriage": "0.2.0"
+    },
+    "environment": "local",
+    "dataset": {
+      "record": "https://zenodo.org/records/8339691",
+      "doi": "10.5281/zenodo.8339691",
+      "file_sha256": {
+        "nazario": "b8fbc4158fbdfaff1ed98584c43d72e283c6352d7ade4d457d34c1d79488d184",
+        "spamassassin": "3bfe8f8abff89f69a98456be50413c2fcb20a476141116dd84ee1507b980c00e"
+      },
+      "split_manifest_sha256": "dd51c8e6939e9937f2b41edf0aad95312070d4c20d4f57ef5ddbc67e819df880",
+      "seed": 42,
+      "frozen_configs_sha256": "a2395a44f6178a2630dea5cb75b09f9a94b0209cc75e0adcbfedb918d33e7c9c",
+      "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+      "code_modified": false
+    },
+    "results": {
+      "train_records": 3949,
+      "fit_seconds": 1.477,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.5498816826190059,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9957081545064378,
+        "f1_phishing": 0.9978494623655914,
+        "macro_f1": 0.9985172332202855,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9999454426420309,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 1,
+          "tp": 232
+        },
+        "inference_seconds": 0.1254,
+        "inference_ms_per_email": 0.1482
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.5498816826190059,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9828326180257511,
+        "f1_phishing": 0.9913419913419913,
+        "macro_f1": 0.9940476190476191,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.999473753435143,
+        "confusion_matrix": {
+          "tn": 614,
+          "fp": 0,
+          "fn": 4,
+          "tp": 229
+        },
+        "inference_seconds": 0.1246,
+        "inference_ms_per_email": 0.1471
+      }
+    },
+    "created_at_utc": "2026-10-15T13:14:31Z"
+  },
+  "tfidf_mnb__original": {
+    "model_id": "tfidf_mnb__original",
+    "kind": "tfidf_mnb",
+    "variant": "original",
+    "params": {
+      "alpha": 0.1,
+      "fit_prior": true
+    },
+    "threshold": 0.40862969778602787,
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "selection_metric": "dev average precision (phishing)",
+    "score_type": "model_estimated_probability_uncalibrated",
+    "preprocessing_version": "2.0",
+    "artifact_rules_version": "1.0",
+    "max_input_chars": 20000,
+    "trained_on": "train split only",
+    "model_file": "model.joblib",
+    "model_sha256": "803d72caadc98a5f1aa6a2e94bba764d340a0b946c8804f74ac028487f3f20d0",
+    "versions": {
+      "python": "3.13.7",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "phishtriage": "0.2.0"
+    },
+    "environment": "local",
+    "dataset": {
+      "record": "https://zenodo.org/records/8339691",
+      "doi": "10.5281/zenodo.8339691",
+      "file_sha256": {
+        "nazario": "b8fbc4158fbdfaff1ed98584c43d72e283c6352d7ade4d457d34c1d79488d184",
+        "spamassassin": "3bfe8f8abff89f69a98456be50413c2fcb20a476141116dd84ee1507b980c00e"
+      },
+      "split_manifest_sha256": "dd51c8e6939e9937f2b41edf0aad95312070d4c20d4f57ef5ddbc67e819df880",
+      "seed": 42,
+      "frozen_configs_sha256": "a2395a44f6178a2630dea5cb75b09f9a94b0209cc75e0adcbfedb918d33e7c9c",
+      "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+      "code_modified": false
+    },
+    "results": {
+      "train_records": 3949,
+      "fit_seconds": 1.346,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.40862969778602787,
+        "precision_phishing": 1.0,
+        "recall_phishing": 1.0,
+        "f1_phishing": 1.0,
+        "macro_f1": 1.0,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9999999999999999,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 0,
+          "tp": 233
+        },
+        "inference_seconds": 0.109,
+        "inference_ms_per_email": 0.1288
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.40862969778602787,
+        "precision_phishing": 0.9871794871794872,
+        "recall_phishing": 0.9914163090128756,
+        "f1_phishing": 0.9892933618843683,
+        "macro_f1": 0.9926091911296333,
+        "false_positive_rate": 0.004885993485342019,
+        "average_precision": 0.9973059920939416,
+        "confusion_matrix": {
+          "tn": 611,
+          "fp": 3,
+          "fn": 2,
+          "tp": 231
+        },
+        "inference_seconds": 0.1166,
+        "inference_ms_per_email": 0.1377
+      }
+    },
+    "created_at_utc": "2026-10-15T13:14:32Z"
+  },
+  "tfidf_logreg__artifact_normalized": {
+    "model_id": "tfidf_logreg__artifact_normalized",
+    "kind": "tfidf_logreg",
+    "variant": "artifact_normalized",
+    "params": {
+      "C": 10.0
+    },
+    "threshold": 0.2606388599527775,
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "selection_metric": "dev average precision (phishing)",
+    "score_type": "model_estimated_probability_uncalibrated",
+    "preprocessing_version": "2.0",
+    "artifact_rules_version": "1.0",
+    "max_input_chars": 20000,
+    "trained_on": "train split only",
+    "model_file": "model.joblib",
+    "model_sha256": "d53d68403e3ec1f9a104f2f0fd555d21a7cbda3ccf9c7a0acecc008bc4a0f640",
+    "versions": {
+      "python": "3.13.7",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "phishtriage": "0.2.0"
+    },
+    "environment": "local",
+    "dataset": {
+      "record": "https://zenodo.org/records/8339691",
+      "doi": "10.5281/zenodo.8339691",
+      "file_sha256": {
+        "nazario": "b8fbc4158fbdfaff1ed98584c43d72e283c6352d7ade4d457d34c1d79488d184",
+        "spamassassin": "3bfe8f8abff89f69a98456be50413c2fcb20a476141116dd84ee1507b980c00e"
+      },
+      "split_manifest_sha256": "dd51c8e6939e9937f2b41edf0aad95312070d4c20d4f57ef5ddbc67e819df880",
+      "seed": 42,
+      "frozen_configs_sha256": "a2395a44f6178a2630dea5cb75b09f9a94b0209cc75e0adcbfedb918d33e7c9c",
+      "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+      "code_modified": false
+    },
+    "results": {
+      "train_records": 3949,
+      "fit_seconds": 1.792,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.2606388599527775,
+        "precision_phishing": 0.9871794871794872,
+        "recall_phishing": 0.9914163090128756,
+        "f1_phishing": 0.9892933618843683,
+        "macro_f1": 0.9926058646156535,
+        "false_positive_rate": 0.004893964110929853,
+        "average_precision": 0.999622153054289,
+        "confusion_matrix": {
+          "tn": 610,
+          "fp": 3,
+          "fn": 2,
+          "tp": 231
+        },
+        "inference_seconds": 0.2431,
+        "inference_ms_per_email": 0.2874
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.2606388599527775,
+        "precision_phishing": 0.9831223628691983,
+        "recall_phishing": 1.0,
+        "f1_phishing": 0.9914893617021276,
+        "macro_f1": 0.9941106939229593,
+        "false_positive_rate": 0.006514657980456026,
+        "average_precision": 0.9997965488769086,
+        "confusion_matrix": {
+          "tn": 610,
+          "fp": 4,
+          "fn": 0,
+          "tp": 233
+        },
+        "inference_seconds": 0.2584,
+        "inference_ms_per_email": 0.3051
+      }
+    },
+    "created_at_utc": "2026-10-15T13:14:32Z"
+  },
+  "tfidf_mnb__artifact_normalized": {
+    "model_id": "tfidf_mnb__artifact_normalized",
+    "kind": "tfidf_mnb",
+    "variant": "artifact_normalized",
+    "params": {
+      "alpha": 0.1,
+      "fit_prior": true
+    },
+    "threshold": 0.928540015624751,
+    "threshold_rule": "threshold maximizing phishing F1 on dev",
+    "selection_metric": "dev average precision (phishing)",
+    "score_type": "model_estimated_probability_uncalibrated",
+    "preprocessing_version": "2.0",
+    "artifact_rules_version": "1.0",
+    "max_input_chars": 20000,
+    "trained_on": "train split only",
+    "model_file": "model.joblib",
+    "model_sha256": "6a5c9b2550557a29e68ff89ea0ebb3457f4fd9bddbf9069be301a13b251ca9fb",
+    "versions": {
+      "python": "3.13.7",
+      "scikit-learn": "1.9.1",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "pandas": "3.0.6",
+      "joblib": "1.6.0",
+      "phishtriage": "0.2.0"
+    },
+    "environment": "local",
+    "dataset": {
+      "record": "https://zenodo.org/records/8339691",
+      "doi": "10.5281/zenodo.8339691",
+      "file_sha256": {
+        "nazario": "b8fbc4158fbdfaff1ed98584c43d72e283c6352d7ade4d457d34c1d79488d184",
+        "spamassassin": "3bfe8f8abff89f69a98456be50413c2fcb20a476141116dd84ee1507b980c00e"
+      },
+      "split_manifest_sha256": "dd51c8e6939e9937f2b41edf0aad95312070d4c20d4f57ef5ddbc67e819df880",
+      "seed": 42,
+      "frozen_configs_sha256": "a2395a44f6178a2630dea5cb75b09f9a94b0209cc75e0adcbfedb918d33e7c9c",
+      "code_commit": "e19b8cc8b108f4894d000783e52c0310054fb0aa",
+      "code_modified": false
+    },
+    "results": {
+      "train_records": 3949,
+      "fit_seconds": 1.659,
+      "vocabulary_size": 50000,
+      "dev": {
+        "support": {
+          "legitimate": 613,
+          "phishing": 233
+        },
+        "phishing_share": 0.2754,
+        "threshold": 0.928540015624751,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9742489270386266,
+        "f1_phishing": 0.9869565217391304,
+        "macro_f1": 0.9910431959345003,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.9986300319712971,
+        "confusion_matrix": {
+          "tn": 613,
+          "fp": 0,
+          "fn": 6,
+          "tp": 227
+        },
+        "inference_seconds": 0.249,
+        "inference_ms_per_email": 0.2943
+      },
+      "test": {
+        "support": {
+          "legitimate": 614,
+          "phishing": 233
+        },
+        "phishing_share": 0.2751,
+        "threshold": 0.928540015624751,
+        "precision_phishing": 1.0,
+        "recall_phishing": 0.9570815450643777,
+        "f1_phishing": 0.9780701754385965,
+        "macro_f1": 0.984996315506051,
+        "false_positive_rate": 0.0,
+        "average_precision": 0.999871283754747,
+        "confusion_matrix": {
+          "tn": 614,
+          "fp": 0,
+          "fn": 10,
+          "tp": 223
+        },
+        "inference_seconds": 0.251,
+        "inference_ms_per_email": 0.2963
+      }
+    },
+    "created_at_utc": "2026-10-15T13:14:32Z"
+  }
+}
