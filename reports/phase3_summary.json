@@ -1,0 +1,80 @@
+{
+  "environment": "local",
+  "code_commit": "86993a39bf53ebe0863aeb823bff2010c23a2423",
+  "code_modified": false,
+  "requested_revision": "local working tree",
+  "run_at_utc": "2026-10-15T13:56:54Z",
+  "versions": {
+    "python": "3.13.7",
+    "scikit-learn": "1.9.1",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pandas": "3.0.6",
+    "joblib": "1.6.0",
+    "phishtriage": "0.3.0"
+  },
+  "tools": [
+    "get_prediction",
+    "inspect_email",
+    "retrieve_playbook",
+    "get_evidence"
+  ],
+  "tool_model": "tfidf_logreg__artifact_normalized",
+  "demo_cases_synthetic": true,
+  "evidence_status_counts": {
+    "case-demo-eml": {
+      "observed": 13,
+      "unverified_claim": 1
+    },
+    "case-demo-pasted": {
+      "observed": 5,
+      "unavailable": 4
+    }
+  },
+  "failure_checks": {
+    "unknown case": "rejected",
+    "evidence from another case": "rejected",
+    "unknown evidence id": "rejected",
+    "unknown tool": "rejected",
+    "unexpected argument": "rejected",
+    "empty query": "rejected",
+    "irrelevant query": "unavailable"
+  },
+  "tool_pipeline_demonstration": {
+    "case-demo-eml": {
+      "case_id": "case-demo-eml",
+      "tool_calls": 10,
+      "prediction_status": "ok",
+      "playbooks": [
+        "PB-01",
+        "PB-02",
+        "PB-04",
+        "PB-03"
+      ]
+    },
+    "case-demo-pasted": {
+      "case_id": "case-demo-pasted",
+      "tool_calls": 4,
+      "prediction_status": "ok",
+      "playbooks": [
+        "PB-07"
+      ]
+    }
+  },
+  "retrieval_summary": {
+    "check_set_version": "1.0",
+    "min_relevance": 0.1,
+    "n_checks": 16,
+    "answerable": 12,
+    "top1_hits": 12,
+    "top3_hits": 12,
+    "abstention_checks": 4,
+    "correct_abstentions": 4
+  },
+  "llm_preflight": {
+    "status": "skipped_opt_in_required",
+    "model": "gemini-3.8-flash",
+    "sdk_version": null,
+    "network_calls": 0
+  }
+}

@@ -12,8 +12,9 @@ bottom in Google-hosted Colab by **19 Oct 2026**.
 - Never commit secrets, `.env`, API keys, raw datasets, or large model files (see `.gitignore`).
   In Colab, read secrets via `google.colab.userdata`, not hard-coded strings.
 - Commit the canonical notebook with outputs **cleared**, to keep diffs reviewable.
-- Reusable logic lives in the `phishtriage/` package (data, text, models, inference); the notebook imports it.
-  In Colab, section 0 clones the public repo's `phishtriage-colab` branch to get it.
+- Reusable logic lives in the `phishtriage/` package; the notebook imports it. In Colab, section 0 checks out
+  `PHISHTRIAGE_REVISION` (default branch `phishtriage-colab`; use a full SHA for reproducible runs). It never
+  resets a modified checkout.
 - Scope is agentic (see the `COLAB_STATUS.md` plan): the classifier is one evidence tool, not the whole deliverable.
 
 ## Git
@@ -57,6 +58,13 @@ Mark a new command as verified only after running it.
 - Never describe test scores as real-world accuracy: source = label in this dataset (`docs/MODEL_EVALUATION.md`).
 - Model artifacts (`model.joblib` + `manifest.json`) stay outside Git; load them only via `inference.load_artifact`,
   which verifies the SHA-256 before unpickling.
+
+## Evidence and tool rules
+- Never fetch URLs, render HTML, open attachments or treat `Authentication-Results` as verified. Missing data
+  is `unavailable`, not safe. Tool failures are non-ok `ToolResult`s, never fabricated successes.
+- Playbooks are labelled EXAMPLE POLICY. Retrieval relevance is not a phishing probability.
+- External LLM calls are opt-in. Read `GEMINI_API_KEY` from Colab Secrets only, and never print or commit it.
+  Phase 4 uses the official `google-genai` SDK (CrewAI was rejected over dependency conflicts).
 
 ## Status tracking
 Update `COLAB_STATUS.md` after each phase, with evidence (a commit hash, a Colab run date, metrics).

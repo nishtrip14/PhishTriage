@@ -23,8 +23,17 @@ with original and artifact-normalized text alike. Because the phishing and legit
 corpora, **this measures corpus separation, not real-world phishing-detection accuracy.**
 See [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md).
 
-Planned next stages: evidence tools and playbook retrieval, bounded investigator/reviewer agents, and a notebook
-interface with report export ([COLAB_STATUS.md](COLAB_STATUS.md)).
+**Evidence and tools (phase 3, local):** pasted or `.eml` input is inspected offline, with no URL fetching,
+HTML rendering or attachment opening. The results are typed evidence items marked observed, unverified claim,
+unavailable or error. Eight original *example* playbooks are searched with a separate TF-IDF index, and four
+read-only, typed tools (`get_prediction`, `inspect_email`, `retrieve_playbook`, `get_evidence`) are ready for
+the agent phase. See [docs/TOOLS_AND_EVIDENCE.md](docs/TOOLS_AND_EVIDENCE.md).
+
+**Reproducible Colab runs:** set `PHISHTRIAGE_REVISION` (section 0) to a full commit SHA. The default
+`phishtriage-colab` branch moves with every push.
+
+Next stages: bounded investigator/reviewer agents, then a notebook interface with report export
+([COLAB_STATUS.md](COLAB_STATUS.md)).
 
 ## Repository layout
 
@@ -32,9 +41,11 @@ interface with report export ([COLAB_STATUS.md](COLAB_STATUS.md)).
 |------|---------|
 | `notebooks/PhishTriage_Colab.ipynb` | Canonical development notebook (source of truth) |
 | `reports/PhishTriage_Colab_Executed.ipynb` | Sanitized, genuinely executed demo copy (created after a real Colab run) |
-| `phishtriage/` | Library code imported by the notebook: data, text preparation, models, inference |
+| `phishtriage/` | Library code imported by the notebook: data, text, models, inference, evidence, retrieval, tools |
 | `tests/` | Offline tests (`pytest tests`) |
 | `docs/DATASET_CARD.md`, `docs/MODEL_EVALUATION.md` | Data provenance and limitations; baseline evaluation |
+| `docs/TOOLS_AND_EVIDENCE.md` | Evidence schemas, safe input, playbooks, retrieval, tools, LLM preflight |
+| `phishtriage/playbooks/` | Example playbooks (labelled EXAMPLE POLICY) and the retrieval check set |
 | `docs/COLAB_WORKFLOW.md` | How to sync changes between GitHub and Colab safely |
 | `COLAB_STATUS.md` | Phase progress, evidence, blockers, next action |
 | `CLAUDE.md` | Project rules for AI-assisted development |
