@@ -91,23 +91,30 @@ Artifacts (`model.joblib` + `manifest.json`, 2–3.5 MB each) stay in the workin
 checks the SHA-256, the preprocessing version and the scikit-learn minor version, and raises `ArtifactError`
 otherwise. **Primary model for later agent tools** (declared before the test run): LR on artifact-normalized text.
 
-## Colab reproduction (genuine Colab run, outputs saved in commit `f2b7277`)
-Sections 0–27 ran in Google Colab at code commit `9acefcb`, with Python 3.13.16, **scikit-learn 1.6.1**, pandas
-2.2.3 and 2 CPUs. The data, the near-duplicate groups and the split reproduced exactly (same manifest SHA-256).
-The selected hyperparameters were the same, but the learned thresholds and a few error counts differ from the
-committed local run (scikit-learn 1.9.1):
+## Runs across environments
+The historical results above are the canonical local run and are left unchanged. Each run is recorded separately,
+and nothing was retuned after any test evaluation.
 
-| Model | Threshold (local → Colab) | Test FP / FN (local → Colab) | Test F1 (local → Colab) | AP (local → Colab) |
+| | Run A: local (canonical reports) | Run B: Google Colab |
+|---|---|---|
+| Code revision | `e19b8cc` (re-run with identical results at `86993a3`, `30a2378`, `e635833`) | `9acefcb` (outputs saved in `f2b7277`) |
+| Environment | macOS, 10 CPUs, Python 3.13.7, numpy 2.5.4, scipy 1.18.1, pandas 3.0.6, scikit-learn 1.9.1 | Colab, 2 CPUs, Python 3.13.16, numpy 2.1.3, scipy 1.16.3, pandas 2.2.3, scikit-learn 1.6.1 |
+| Data and split | pinned SHA-256 files; manifest `dd51c8e6…` | same files (verified); same manifest SHA-256 |
+| Selected hyperparameters | LR C=10; NB α=0.1, learned prior (both variants) | identical |
+
+| Model | Threshold A → B | Test FP / FN A → B | Test F1 A → B | Test AP A → B |
 |---|---|---|---|---|
-| LR, original | 0.550 → 0.549 | 0/4 → 0/3 | 0.991 → 0.994 | 0.9995 → 0.9995 |
-| NB, original | 0.409 → 0.469 | 3/2 → 3/2 | 0.989 → 0.989 | 0.9973 → 0.9973 |
-| **LR, artifact-normalized (primary)** | 0.261 → 0.255 | 4/0 → 4/0 | 0.991 → 0.991 | 0.9998 → 0.9998 |
-| NB, artifact-normalized | 0.929 → 0.847 | 0/10 → 1/4 | 0.978 → 0.989 | 0.9999 → 0.9999 |
+| LR, original | 0.5499 → 0.5488 | 0/4 → 0/3 | 0.9913 → 0.9935 | 0.9995 → 0.9995 |
+| NB, original | 0.4086 → 0.4688 | 3/2 → 3/2 | 0.9893 → 0.9893 | 0.9973 → 0.9973 |
+| **LR, artifact-normalized (primary)** | 0.2606 → 0.2547 | 4/0 → 4/0 | 0.9915 → 0.9915 | 0.9998 → 0.9998 |
+| NB, artifact-normalized | 0.9285 → 0.8471 | 0/10 → 1/4 | 0.9781 → 0.9892 | 0.9999 → 0.9999 |
 
-The committed reports remain the local run. Neither run was retuned. Colab retrains in its own runtime, so its
-artifacts carry its own thresholds and manifests. The differences are within the noise already noted (a handful
-of errors) and do not change any conclusion. Results are **version-dependent**, so record the environment with
-any number you quote. Raw evidence: `reports/colab_run_9acefcb.json` (sanitized extract).
+**Interpretation.** The differences were *observed across environments* that differ in several library versions
+and CPU count. Library-version differences (for example in the TF-IDF or liblinear implementations) are a
+**plausible explanation**, but it is **not established**: no controlled run varied one factor at a time.
+
+The differences are a handful of errors at most and do not change any conclusion. Quote any number together with
+its run (A or B). Run B evidence: `reports/colab_run_9acefcb.json` (sanitized extract).
 
 ## Validity limitations still open
 1. Source = label in every split. No external or unseen-source validation exists yet. One focused search on

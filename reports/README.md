@@ -23,6 +23,8 @@ Small, non-sensitive evidence only. No message text, raw data or model binaries.
   timings, so they were left unchanged.
 - Phase 3 files: code commit `86993a3`, clean tree. Reproduced exactly at `30a2378`.
 - Phase 4 file: code commit `e635833`, clean tree. Replay and evidence-only only; no live run.
-- `colab_run_9acefcb.json`: genuine Colab outputs (scikit-learn 1.6.1); see `docs/MODEL_EVALUATION.md` for the small threshold and metric differences.
+- `colab_run_9acefcb.json`: genuine Colab outputs at code `9acefcb` (run B in `docs/MODEL_EVALUATION.md`). The
+  differences from the local run are observed across environments; the cause is not established.
+- User-reported live preflight and agent results are recorded in `COLAB_STATUS.md` only. No artifact for them exists here.
 
 The local reports stay canonical. Colab evidence is kept alongside them, not swapped in.

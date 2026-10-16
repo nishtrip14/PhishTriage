@@ -12,9 +12,9 @@ below follow the owner's prompts.
 |---|-------|--------|----------|
 | 0 | Repository & notebook scaffolding | Done | `170260b` on `origin/main` |
 | 1 | Data acquisition/audit & Colab verification | **Done; verified locally and in Colab** (`9acefcb`, outputs in `f2b7277`) | `docs/DATASET_CARD.md`, `reports/audit_summary.json`, `reports/split_manifest.csv` |
-| 2 | Classifier training & evaluation | **Done; verified locally and in Colab** (Colab scikit-learn 1.6.1 gives slightly different thresholds; see `docs/MODEL_EVALUATION.md`) | `docs/MODEL_EVALUATION.md`, `reports/phase2_metrics.json`, code `e19b8cc` |
-| 3 | Local evidence tools & playbook retrieval (RAG over a small, cited playbook corpus) | **Done; verified locally and in Colab.** Live LLM preflight never run. | `docs/TOOLS_AND_EVIDENCE.md`, `reports/retrieval_check.json`, `reports/phase3_summary.json`, code `86993a3` |
-| 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | **Implemented and offline-tested; replay and evidence-only verified in Colab (`9acefcb`).** Quota/batch fixes (`e635833`) not yet run in Colab; live provider never run. | `docs/AGENT_WORKFLOW.md`, `reports/phase4_summary.json`, `reports/colab_run_9acefcb.json`, code `e635833` |
+| 2 | Classifier training & evaluation | **Done; run locally and in Colab.** Thresholds and a few error counts differed between the two environments; the cause is not established (see `docs/MODEL_EVALUATION.md`) | `docs/MODEL_EVALUATION.md`, `reports/phase2_metrics.json`, code `e19b8cc` |
+| 3 | Local evidence tools & playbook retrieval (RAG over a small, cited playbook corpus) | **Done; verified locally and in Colab (`9acefcb`).** Live preflight: user-reported `ok` (see below); revision not recorded. | `docs/TOOLS_AND_EVIDENCE.md`, `reports/retrieval_check.json`, `reports/phase3_summary.json`, code `86993a3` |
+| 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | **Implemented and offline-tested; replay and evidence-only verified in Colab (`9acefcb`).** User-reported live results exist (see below; revision not recorded). The quota/batch fixes (`e635833`) have not run in Colab. | `docs/AGENT_WORKFLOW.md`, `reports/phase4_summary.json`, `reports/colab_run_9acefcb.json`, code `e635833` |
 | 5 | Notebook interface, report export & agent evaluation | Not started | |
 | 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | Not started | |
 
@@ -22,9 +22,9 @@ below follow the owner's prompts.
 | Stage | Implementation | Offline tests | Local notebook run | Genuine Colab run | Live provider |
 |---|---|---|---|---|---|
 | 1 Data | done | yes | yes | **yes** (`9acefcb`; identical split) | n/a |
-| 2 Classifier | done | yes | yes (reproduced exactly) | **yes** (scikit-learn 1.6.1: small threshold/metric differences, see `docs/MODEL_EVALUATION.md`) | n/a |
-| 3 Evidence, retrieval, tools | done | yes | yes | **yes** (results identical) | preflight **never run** |
-| 4 Agents | done (+ quota/batch fixes `e635833`) | yes (89 tests total) | yes, at `e635833` | **yes, offline paths only** (replay and evidence-only at `9acefcb`; live skipped) | **never run** |
+| 2 Classifier | done | yes | yes (reproduced exactly) | **yes** (thresholds and a few error counts differ from the local run; cause not established) | n/a |
+| 3 Evidence, retrieval, tools | done | yes | yes | **yes** (results identical) | preflight **user-reported `ok`** (`gemini-3.6-flash`, SDK 2.12.1); not in any recovered notebook |
+| 4 Agents | done (+ quota/batch fixes `e635833`) | yes (89 tests total) | yes, at `e635833` | **yes, offline paths only** (replay and evidence-only at `9acefcb`) | **user-reported historical results** (below); code revision not recorded; `e635833`+ not run live |
 
 - **Local:** this Mac (Python 3.13.7, pandas 3.0.6, scikit-learn 1.9.1).
 - **Colab:** Python 3.13.16, pandas 2.2.3, scikit-learn 1.6.1, 2 CPUs. The outputs were saved in commit
@@ -36,8 +36,50 @@ below follow the owner's prompts.
 - **2026-10-16:** commit `f2b7277` ("Adding Gemini API", notebook only) contains genuine Colab outputs.
   - **Run:** one consecutive error-free pass over sections 0–27 at code commit `9acefcb`.
   - **Flag edit:** cell 50's source was edited to `RUN_LLM_PREFLIGHT = True` **after** that run; its saved output
-    shows the preflight skipped. No live Gemini call is evidenced anywhere.
+    shows the preflight skipped. This notebook contains no live Gemini call. Separately, the owner reported live
+    preflight and agent runs (see "User-reported historical live results").
   - **Raw notebook:** kept untracked in `colab_import/` (SHA-256 `e271c5d2…`).
+
+## Verification by revision
+| Revision | What ran | Where | Evidence |
+|---|---|---|---|
+| `9acefcb` | Sections 0–27, offline paths (live sections skipped) | Google Colab | saved outputs in `f2b7277`; extract `reports/colab_run_9acefcb.json` |
+| *not recorded* | Section 21 preflight and section 26 live agent | Google Colab | **user-reported** only (below); no executed notebook recovered |
+| `e635833` | Quota/batch fixes; 89 offline tests; notebook sections 0–27 (live skipped) | local Mac | test output in this session; `reports/phase4_summary.json` |
+| `9283ce1` | Documentation and evidence only (no code change from `e635833`) | n/a | branch HEAD at the time of writing |
+
+**Updated code (`e635833` and later) still needs a fresh Colab run**, offline and live.
+
+## User-reported historical live results (Colab)
+These were reported by the owner. They are **not** contained in the recovered notebook. The code revision,
+timestamps and executed notebook were not recorded, and none is inferred here.
+
+**Section 21 preflight:**
+- `status: ok`, model `gemini-3.6-flash`, google-genai SDK `2.12.1`.
+- `model_lookup` ok; `function_call` ok and returned `record_check`.
+- `network_calls: 2`.
+
+**Section 26 live agent:**
+
+| Case | Outcome | Model requests | Tool executions |
+|---|---|---|---|
+| credential_link | `provider_server` | 3 | 3 |
+| benign_notification | approved; assessment `no_strong_indicators`; one reviewer pass | 5 | 3 |
+| ambiguous | `provider_quota` after a server error | 4 | not reported |
+| prompt_injection | `provider_quota` before investigation | 2 | not reported |
+
+**Observations.** These are interpretations of the reported results, not established facts.
+- **Quota requests consumed:** the request counts for the quota cases are consistent with the earlier behaviour
+  that retried quota errors once. `e635833` stops after the first 429, and `run_batch_triage` would not have
+  submitted the later cases.
+- **Unsupported "no attachments" claim:** the approved benign report contained an apparent "no attachments" claim
+  while attachment metadata was `unavailable` (pasted input).
+  - Neither the deterministic checks nor the reviewer caught it. **Reviewer approval does not establish that an
+    explanation is correct.**
+  - This is an open evidence-grounding defect: absence claims are not checked against `unavailable` evidence.
+- **Model mismatch:** the model that passed the preflight (`gemini-3.6-flash`) differs from the code default
+  (`gemini-3.8-flash`), so the model configuration must be kept consistent between preflight and agent.
+- **SDK version:** the Colab SDK (2.12.1) is older than the version the adapter was checked against offline (2.31.0).
 
 ## Recovery and reconciliation (2026-10-16)
 - **Gemini's runtime work:** reported as a quota-abort patch in `agent.py`, `run_batch_triage`,
@@ -113,14 +155,14 @@ below follow the owner's prompts.
   The live agent was skipped (`RUN_LIVE_AGENT = False`, no key).
 
 ## Blockers and open risks
-- **Live Gemini path is unverified** (no evidenced preflight or live call). The `e635833` fixes have not run in
-  Colab yet.
+- **Live path:** only user-reported historical results exist (above), at an unrecorded revision. The `e635833`
+  fixes have not run in Colab.
+- **Open defects:** absence claims are not grounded against `unavailable` evidence; server-error retry handling
+  and model configuration consistency need tightening. These are scheduled for the next implementation phase.
 - **Confounded data:** source = label in every split; no external validation set (searched once on 2026-10-15,
   recorded as pending); residual cues `utf`/`url`/topics; a ~15-year date gap.
-- **No live LLM call yet (main blocker for the agent demo).** Smallest fix: add the `GEMINI_API_KEY` Colab
-  secret, set `RUN_LLM_PREFLIGHT = True` (section 21) and `RUN_LIVE_AGENT = True` (section 26), then run them.
-  If `gemini-3.8-flash` is not available to the account, set `PHISHTRIAGE_GEMINI_MODEL` to a model that passes
-  the preflight.
+- **Fresh live verification of the current code** is still useful, but it is not a prerequisite for offline
+  implementation work. The key lives in Colab Secrets only; live calls stay opt-in.
 - **Colab uses pandas 2.x and possibly a different scikit-learn minor version.** Models are retrained in the
   runtime, so artifacts are never moved across versions.
 

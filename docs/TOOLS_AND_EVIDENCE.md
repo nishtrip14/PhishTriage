@@ -118,7 +118,9 @@ instruction-like text as evidence. Whether an LLM agent ignores such text is som
 - **Bounds:** a 30 s timeout and at most 2 attempts, retrying only 429 and 5xx. 400/401/403/404 are reported
   without retry.
 - **SDK:** checked offline against `google-genai` 2.31.0 (config objects build, and `response.function_calls`
-  parses). **No live call has been made yet:** there were no credentials in this environment.
+  parses).
+- **Live result:** the owner later reported a successful Colab preflight (`status: ok`, `gemini-3.6-flash`,
+  SDK 2.12.1, `record_check` returned, 2 network calls). The revision is not recorded; see `COLAB_STATUS.md`.
 - **CrewAI not adopted:** `crewai[google-genai]` 1.15.28 pins `google-genai~=1.65.0`, which pip cannot resolve
   together with 2.31.0. On its own it installs about 141 packages (chromadb, onnxruntime, Kubernetes client,
   OpenTelemetry) and pins pydantic < 2.13. Phase 4 will use the official SDK with explicit, bounded tool calls.

@@ -17,7 +17,7 @@ print(A.format_report(result.report)); result.trace   # observable actions only
 | Offline tests | `pytest tests`: **89 passed** (agent and quota tests use a scripted adapter or a fake Gemini client; network blocked) |
 | Local notebook execution | Sections 0–27 ran end to end at `e635833` (clean tree); phase 1–3 outputs reproduced exactly |
 | Genuine Colab execution | **Yes, offline paths:** sections 0–27 ran in Colab at `9acefcb` (outputs saved in `f2b7277`). Replay and evidence-only results matched the local run; the live sections were skipped |
-| Live provider (Gemini) | **Not verified.** No evidenced preflight or live call; the saved Colab outputs show the preflight skipped |
+| Live provider (Gemini) | **User-reported historical results only** (preflight `ok` with `gemini-3.6-flash`, SDK 2.12.1; four live cases, see `COLAB_STATUS.md`). Revision not recorded; not in any recovered notebook. `e635833`+ not run live |
 
 ## State transitions
 ```
@@ -143,8 +143,10 @@ modern notification-style text resembles the 2015–2022 Nazario phishing more t
 These synthetic results are not detection evidence and are never combined with the held-out metrics.
 
 ## Known limitations
-- No live run has happened yet. Real Gemini behaviour (tool choice, schema compliance, reviewer strictness,
-  latency and quota) is unverified.
+- Live behaviour is known only from user-reported historical results (unrecorded revision): one approved case,
+  one server error and two quota stops. In the approved case the report made an apparent unsupported "no
+  attachments" claim while attachment metadata was unavailable, and the reviewer approved it. **Reviewer approval
+  does not establish that an explanation is correct**, and absence claims are not yet validated deterministically.
 - The prompt-injection handling (delimiters, tools bound to the case, validation, reviewer) reduces risk but does
   not make the system immune. Only scripted behaviour has been tested.
 - Deterministic checks catch invalid citations and a few overclaim patterns. They cannot judge truth.
