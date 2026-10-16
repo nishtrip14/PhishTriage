@@ -63,7 +63,8 @@ Mark a new command as verified only after running it.
 - Never fetch URLs, render HTML, open attachments or treat `Authentication-Results` as verified. Missing data
   is `unavailable`, not safe. Tool failures are non-ok `ToolResult`s, never fabricated successes.
 - Playbooks are labelled EXAMPLE POLICY. Retrieval relevance is not a phishing probability.
-- External LLM calls are opt-in. Read `GEMINI_API_KEY` from Colab Secrets only, and never print or commit it.
+- External LLM calls are opt-in. Read `GEMINI_API_KEY` from Colab Secrets; locally, only from the git-ignored
+  `.env` via `llm_preflight.load_local_env` (never overwrites, skipped in Colab). Never print or commit it.
   Phase 4 uses the official `google-genai` SDK (CrewAI was rejected over dependency conflicts).
 
 ## Handoff rules

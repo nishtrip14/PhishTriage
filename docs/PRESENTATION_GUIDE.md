@@ -64,11 +64,12 @@ except the optional language-model calls runs in the notebook."
   * Validated retrieval citations.
   * A bounded agent loop with reviewer and revision, budgets, quota and retry policy.
   * A safe notebook interface and privacy-preserving export.
-  * 122 offline tests.
+  * 127 offline tests.
 * **Limitations:**
   * Source-confounded data; no external validation.
   * Uncalibrated scores.
   * Pattern-based grounding checks.
   * The reviewer uses the same model.
-  * Live behaviour known only from user-reported runs.
+  * Live: a preflight passed at the current code, but no live case has completed at that revision (provider
+    503s); earlier successes are user-reported.
   * Not production-ready.

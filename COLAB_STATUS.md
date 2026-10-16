@@ -98,6 +98,19 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   selection, `.eml` part and attachment limits. Full suite: 122 passed (2.31.0); 121 passed + 1 skipped (2.12.1).
 - **Current matrix:** [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
+## Local live check (2026-10-16, code `256f5b2`)
+- **Change:** `llm_preflight.load_local_env` copies `GEMINI_API_KEY` (and `PHISHTRIAGE_GEMINI_MODEL`) from the
+  git-ignored project-root `.env` with python-dotenv, never overwrites an existing variable, returns names only,
+  and does nothing in Colab (Secrets loading unchanged). Section 21 calls it only outside Colab. Section 0 now
+  installs `ipywidgets` if missing: an owner's local run had failed at section 28 with `ModuleNotFoundError`.
+- **Tests:** 127 passed (2.31.0); 126 passed + 1 skipped (2.12.1).
+- **Bounded live run** (Mac, google-genai 2.31.0, scratch copy of the notebook with only `RUN_LLM_PREFLIGHT` and
+  `RUN_LIVE_AGENT` on): preflight **ok** for `gemini-3.6-flash` (2 network calls). The one synthetic case
+  (`credential_link`) ended **failed / `provider_server`**: 3 × HTTP 503 "high demand", 2 jittered retries, 3
+  requests, 0 tool calls. No quota error occurred. No further case was attempted. The key was not found in any
+  output or work file.
+- **Not shown by this:** a completed live investigation, review or revision at the current code.
+
 ## Recovery and reconciliation (2026-10-16)
 - **Gemini's runtime work:** reported as a quota-abort patch in `agent.py`, `run_batch_triage`,
   `tests/test_quota_handling.py`, repeated `preflight_not_passed` runs, mocking of `run_triage`, a final

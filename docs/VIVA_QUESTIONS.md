@@ -106,7 +106,7 @@ evidence-only reports, the interface and export. Live mode stays blocked until t
   attachments".
 
 **18. What was actually tested?**
-* **Offline:** 122 tests (data integrity, splits, train-only fitting, parsing limits, evidence statuses, retrieval,
+* **Offline:** 127 tests (data integrity, splits, train-only fitting, parsing limits, evidence statuses, retrieval,
   tools, the agent loop with scripted and fake-Gemini adapters, retries, budgets, quota, configuration, interface
   logic, export privacy).
 * **Notebook:** full local runs at the current code, and a Colab run at code `9acefcb`.
@@ -116,8 +116,8 @@ evidence-only reports, the interface and export. Live mode stays blocked until t
 * Colab evidence for the **current** code: the owner reports a successful run, but the executed notebook hasn't
   been supplied.
 * Widget interaction confirmed by a person.
-* Live runs of the current retry, quota and grounding code. Earlier live results are user-reported only, at an
-  unrecorded revision.
+* A completed live case at the current code: the local preflight passed, but the one live case ended with
+  HTTP 503 after 2 bounded retries. Earlier live results are user-reported only, at an unrecorded revision.
 * Any real-world accuracy.
 
 **20. What would be needed before real deployment?**
