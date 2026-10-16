@@ -44,8 +44,9 @@ ipywidgets interface (escaped output, stale-input guard) ─► JSON export (sum
 * **Data:** Nazario phishing vs SpamAssassin ham (Zenodo 10.5281/zenodo.8339691, CC-BY-4.0); see
   [docs/DATASET_CARD.md](docs/DATASET_CARD.md).
 * **Baselines:** two TF-IDF baselines reach test F1 ≈ 0.98–0.99. **Every phishing email comes from one corpus and
-  every legitimate email from another**, so these scores measure corpus separation, **not** real-world detection
-  accuracy. There is **no external validation**.
+  every legitimate email from another**. This source/class confound means the high scores **cannot be attributed
+  to generalizable phishing detection**: the models may rely partly or wholly on differences between the corpora.
+  There is **no external validation**.
 * **Artifact sensitivity:** removing known collection artifacts barely changed the scores, and residual cues remain.
 * **Score type:** uncalibrated model estimates, not probabilities.
 * **Runs across environments:** a local run and a Colab run gave slightly different thresholds and error counts.

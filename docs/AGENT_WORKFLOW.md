@@ -122,7 +122,7 @@ not an independent guarantee.
 ## Retry policy and diagnostics (phase 5)
 | Error | Policy |
 |---|---|
-| timeout, network, HTTP 5xx | Retry with jittered exponential backoff (base 2 s, cap 8 s). A provider `RetryInfo.retryDelay` is honoured if ≤ 20 s |
+| timeout, network, HTTP 5xx | Retry with jittered exponential backoff (base 2 s, cap 8 s). A provider `RetryInfo.retryDelay` is a minimum: it is waited **in full** (jitter only adds time) if the wait still leaves the deadline window and finish reserve; otherwise there is no early retry, and the case finishes or stops with a partial result. An optional `max_retry_wait_s` cap is off by default |
 | HTTP 429, classified as a **rate limit** by the error body (`rate_limit_exceeded`, `too_many_requests`, or a `QuotaFailure` quotaId with `PerMinute`/`PerSecond`) | Retry once the provider delay or backoff has passed, if the wait fits the deadline and request reservation |
 | HTTP 429, **daily** (`quota_exceeded`, quotaId `PerDay`) or **unclassified** | **Not retried.** The case ends with `provider_quota`, and `run_batch_triage` skips the later cases |
 | 401/403/404/400 | Not retried |
@@ -203,7 +203,9 @@ These synthetic results are not detection evidence and are never combined with t
 - Live behaviour is known only from user-reported historical results (unrecorded revision): one approved case,
   one server error and two quota stops. In the approved case the report made an apparent unsupported "no
   attachments" claim while attachment metadata was unavailable, and the reviewer approved it. **Reviewer approval
-  does not establish that an explanation is correct**, and absence claims are not yet validated deterministically.
+  does not establish that an explanation is correct**. Since `1955903`, absence claims are checked
+  deterministically for common phrasings (see "Evidence grounding"); other phrasings still depend on the reviewer
+  and the human reader.
 - The prompt-injection handling (delimiters, tools bound to the case, validation, reviewer) reduces risk but does
   not make the system immune. Only scripted behaviour has been tested.
 - Deterministic checks catch invalid citations and a few overclaim patterns. They cannot judge truth.

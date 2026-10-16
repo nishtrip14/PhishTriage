@@ -9,7 +9,8 @@ This is a **confounded benchmark**. Every phishing email comes from the Nazario 
 every legitimate email from SpamAssassin mailing-list ham (about 2002). Grouped splitting stops duplicates and
 near-duplicates from crossing splits. It does **not** remove the source–label confound.
 
-The scores below therefore measure how well the two corpora can be told apart. They are **not** real-world
+The scores below therefore cannot be attributed to generalizable phishing detection: they may reflect corpus
+differences partly or wholly, and the data cannot tell these apart. They are **not** evidence of real-world
 phishing-detection accuracy, and they say nothing about generalization to unseen sources. Leave-one-source-out
 evaluation was not run, because each source contains only one class.
 
@@ -69,7 +70,7 @@ With about 4–10 errors per configuration, the differences between models are w
   (`apt`, `linux`, `cvs`, `razor`, `irish`, `wrote`).
   These were found **after** the test run, so the rules were not changed. They are candidates for a future rule
   revision, which must be checked on dev only.
-- **Conclusion:** normalization removes the obvious collection cues but not the corpus separation. Style, topic
+- **Conclusion:** normalization removes the obvious collection cues, but the corpora remain separable. Style, topic
   and encoding still identify the source. This is a sensitivity analysis. It does not show that the confound has
   been eliminated.
 

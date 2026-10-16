@@ -167,3 +167,55 @@ def test_widget_callbacks_recover_and_never_auto_run(session, no_network):
     w["mode"].value = "live"
     w["analyze"].click()
     assert "live mode unavailable" in w["message"].value                 # no preflight -> no API call
+
+
+# ---------------------------------------------------------------- configuration propagation and outcome counts
+
+def test_interface_follows_current_configuration_and_keeps_history(demo_tools, monkeypatch, no_network):
+    monkeypatch.setattr(LP, "installed_sdk_version", lambda: "2.12.1")
+    cfg = {"settings": LP.LLMSettings("gemini-3.6-flash"), "registry": LP.PreflightRegistry()}
+    seen = []
+
+    def factory(approval, settings):
+        seen.append(settings.model)
+        return None, "no key in tests"
+    session = U.TriageSession(demo_tools, settings=lambda: cfg["settings"], preflights=lambda: cfg["registry"],
+                              live_adapter_factory=factory)
+    first = session.analyze(source="pasted", mode="evidence_only", subject="s", body="b")
+    assert session.live_status()[0] is False                        # created before any preflight
+    cfg["registry"].record({"status": "ok", "model": "gemini-3.6-flash", "sdk_version": "2.12.1"})
+    assert session.live_status()[0] is True                         # later approval recognised, no rebuild
+    with pytest.raises(U.InputError):
+        session.analyze(source="synthetic", mode="live", synthetic_name="ambiguous", live_acknowledged=True)
+    assert seen == ["gemini-3.6-flash"]
+    cfg["settings"] = LP.LLMSettings("gemini-3.8-flash")            # model changed in section 21
+    ok, why = session.live_status()
+    assert not ok and "gemini-3.8-flash" in why                      # approval for the old model does not carry over
+    assert session.attempts == [first]                              # history kept
+
+
+def _report(status):
+    from phishtriage.agent import TriageReport
+    return TriageReport(case_id="c", execution_mode="live", mode_notice="", status=status, termination_reason="x",
+                        classifier=None, assessment=None, assessment_note="", findings=[], playbook_refs=[],
+                        missing_information=[], recommended_actions=[], review={}, limitations=[], usage={},
+                        provider={})
+
+
+def test_live_outcome_counts_use_actual_statuses():
+    s26 = [{"batch": [{"batch_status": "ran", "report_status": "approved"},
+                      {"batch_status": "ran", "report_status": "failed"},
+                      {"batch_status": "skipped_due_to_quota", "report_status": None}]},
+           {"batch": [{"batch_status": "ran", "report_status": "needs_human_review"}]}]
+    result = type("R", (), {})
+    def attempt(mode, status=None):
+        a = U.Attempt("a", "c", "t", "pasted", None, "f", mode, None)
+        if status:
+            a.result = type("Res", (), {"report": _report(status)})()
+        return a
+    ui_attempts = [attempt("live", "approved"), attempt("live"), attempt("replay", "approved"),
+                   attempt("live", "failed")]
+    counts = X.live_outcome_counts(s26, ui_attempts)
+    assert counts["section_26"] == {"attempted": 3, "approved": 1, "needs_human_review": 1, "failed": 1, "skipped": 1}
+    assert counts["interface"] == {"attempted": 3, "approved": 1, "needs_human_review": 0, "failed": 2, "skipped": 0}
+    assert counts["total"]["approved"] == 2 and counts["total"]["failed"] == 3   # failures never counted as completed

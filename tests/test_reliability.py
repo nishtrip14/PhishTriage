@@ -91,13 +91,27 @@ def test_provider_retry_delay_is_honoured_for_rate_limits_only(demo_tools):
     assert res.report.termination_reason == "provider_quota" and c.waits == [] and len(adapter.requests) == 1
 
 
-def test_long_retry_delay_is_not_waited_for(demo_tools):
-    slow = ProviderError("server", "503", retry_delay_s=60.0)
+def test_long_provider_delay_is_honoured_in_full_when_the_budget_allows(demo_tools):
+    slow = ProviderError("server", "503", retry_delay_s=30.0)
+    res, adapter, c = run(demo_tools, [slow, calls(call("inspect_email")), text("READY"), good_draft, AR.approve()])
+    assert len(c.waits) == 1 and c.waits[0] >= 30.0            # never shortened; jitter only adds time
+    assert res.report.status == "approved" and res.report.usage["provider_retries"] == 1
+
+
+def test_provider_delay_that_does_not_fit_is_not_retried_early(demo_tools):
+    # 90 s deadline: waiting 75 s would leave < 20 s reserve + 2 s window, so there is no retry at all (not a
+    # shorter wait); investigation ends and the case finishes as a partial result.
+    slow = ProviderError("server", "503", retry_delay_s=75.0)
     res, adapter, c = run(demo_tools, [slow, good_draft, AR.approve()])
     assert c.waits == [] and [q.kind for q in adapter.requests][:3] == ["investigate", "finalize", "review"]
-    assert any(t["kind"] == "budget_reserve" and "wait limit" in t["code"] for t in res.trace)
-    # Nothing was gathered, so the draft's citation cannot be valid: the case is not approved.
-    assert res.report.status == "needs_human_review"
+    assert any(t["kind"] == "budget_reserve" and "deadline" in t["code"] for t in res.trace)
+    assert res.report.status == "needs_human_review"           # nothing gathered: no valid citation
+
+
+def test_optional_wait_cap_is_respected_when_configured(demo_tools):
+    slow = ProviderError("server", "503", retry_delay_s=30.0)
+    res, adapter, c = run(demo_tools, [slow, good_draft, AR.approve()], max_retry_wait_s=10.0)
+    assert c.waits == [] and any("configured wait cap" in (t["code"] or "") for t in res.trace)
 
 
 def test_retry_wait_cannot_overrun_the_deadline(demo_tools):

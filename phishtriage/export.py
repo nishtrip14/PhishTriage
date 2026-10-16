@@ -106,3 +106,40 @@ def write_json(obj: dict, directory: Path, name: str) -> Path:
     path = directory / f"{safe}.json"
     path.write_text(json.dumps(obj, indent=2, default=str) + "\n", encoding="utf-8")
     return path
+
+
+LIVE_OUTCOMES = ("attempted", "approved", "needs_human_review", "failed", "skipped")
+
+
+def live_outcome_counts(section_26_attempts: list[dict], interface_attempts: list) -> dict:
+    """Count live cases by their ACTUAL report status, separately for section 26 batches and interface attempts.
+
+    attempted = submitted to the live workflow; approved = report approved by the reviewer; failed includes failure
+    reports and internal errors; skipped = never submitted (batch stopped on quota/auth/unavailable model).
+    A returned failure report is never counted as a successful completion."""
+    def blank():
+        return {k: 0 for k in LIVE_OUTCOMES}
+
+    def bucket(status):
+        return status if status in ("approved", "needs_human_review") else "failed"
+
+    s26 = blank()
+    for attempt in section_26_attempts or []:
+        for row in attempt.get("batch") or []:
+            if row.get("batch_status") == "ran":
+                s26["attempted"] += 1
+                s26[bucket(row.get("report_status"))] += 1
+            else:
+                s26["skipped"] += 1
+    ui = blank()
+    for a in interface_attempts or []:
+        if getattr(a, "mode", None) != "live":
+            continue
+        ui["attempted"] += 1
+        ui[bucket(a.result.report.status if a.result is not None else None)] += 1
+    return {"section_26": s26, "interface": ui, "total": {k: s26[k] + ui[k] for k in LIVE_OUTCOMES},
+            "definitions": {"attempted": "submitted to the live workflow",
+                            "approved": "report approved by the reviewer (not a guarantee of correctness)",
+                            "needs_human_review": "report returned for human review (includes partial results)",
+                            "failed": "failure report or internal error; never counted as completed",
+                            "skipped": "not submitted because an earlier case stopped the batch"}}

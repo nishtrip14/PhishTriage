@@ -16,7 +16,7 @@ https://colab.research.google.com/github/nishtrip14/PhishTriage/blob/phishtriage
 | Show | Section | Point to make |
 |---|---|---|
 | Verified data and grouped splits | 2, 5 | Pinned checksums; near-duplicate groups never cross splits |
-| Baseline results | 11–12 | F1 ≈ 0.98–0.99, **but** phishing and legitimate mail come from different corpora (source = label). This measures corpus separation, not real-world accuracy. There is no external validation. |
+| Baseline results | 11–12 | F1 ≈ 0.98–0.99, **but** phishing and legitimate mail come from different corpora (source = label), so the scores cannot be attributed to generalizable phishing detection. There is no external validation. |
 | Safe evidence | 16 | Statuses: observed / observed_absent (checked, not found) / unavailable (unknown) / unverified_claim / error |
 | Playbooks and retrieval | 17–18 | EXAMPLE POLICY documents; retrieval relevance is not phishing probability |
 | Tools | 19–20 | Four read-only tools; cross-case and unknown calls are rejected |
@@ -51,13 +51,14 @@ Good interface examples:
 | `preflight_not_passed` | No passed preflight for the configured model and SDK in this runtime | Run section 21 with `RUN_LLM_PREFLIGHT = True` |
 | `provider_quota` (quota: daily / unclassified) | Quota is exhausted; it is not retried, and a batch stops | Switch the interface to **Evidence only** or **Scripted replay** (both clearly labelled), or try later |
 | `provider_quota` (quota: rate_limit) | Short-term limit; retried once if the provider delay fits the budget | Wait a minute, then retry |
-| `provider_server` | 5xx or overload after bounded backoff retries (at most 2 per run) | Retry later, or set `MODEL_OVERRIDE` to another listed model **and re-run its preflight** (there is no automatic switch) |
+| `provider_server` | 5xx or overload after bounded backoff retries (at most 2 per run; a provider-requested delay is waited in full only if it fits the deadline, never shortened) | Retry later, or set `MODEL_OVERRIDE` to another listed model **and re-run its preflight** (there is no automatic switch) |
 | `budget_exhausted` / `deadline_exceeded` | A partial result, marked needs human review | Explain the budgets; this is intended behaviour |
 
 Never present a replay or evidence-only result as a live result.
 
 ## 5. What not to claim
-* Production readiness, or real-world detection accuracy: the 0.99 test F1 measures separation of two corpora.
+* Production readiness, or real-world detection accuracy: because of the source/class confound, the 0.99 test F1
+  cannot be attributed to generalizable phishing detection.
 * Calibrated probabilities: scores are uncalibrated model estimates.
 * Immunity to prompt injection: the handling reduces risk but does not eliminate it.
 * That reviewer approval guarantees correctness. A user-reported live run approved an unsupported

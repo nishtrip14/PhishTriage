@@ -74,13 +74,17 @@ timestamps and executed notebook were not recorded, and none is inferred here.
 - **Quota requests consumed:** the request counts for the quota cases are consistent with the earlier behaviour
   that retried quota errors once. `e635833` stops after the first 429, and `run_batch_triage` would not have
   submitted the later cases.
-- **Unsupported "no attachments" claim:** the approved benign report contained an apparent "no attachments" claim
-  while attachment metadata was `unavailable` (pasted input).
+- **Unsupported "no attachments" claim (historical, code at the time of the report; revision not recorded):** the
+  approved benign report contained an apparent "no attachments" claim while attachment metadata was
+  `unavailable` (pasted input). **Status now:** addressed in `1955903` (the `observed_absent` vs `unavailable`
+  statuses, plus a deterministic absence-claim check covering common phrasings), offline-tested but not yet
+  re-run live.
   - Neither the deterministic checks nor the reviewer caught it. **Reviewer approval does not establish that an
     explanation is correct.**
-  - This is an open evidence-grounding defect: absence claims are not checked against `unavailable` evidence.
-- **Model mismatch:** the model that passed the preflight (`gemini-3.6-flash`) differs from the code default
-  (`gemini-3.8-flash`), so the model configuration must be kept consistent between preflight and agent.
+  - At that time absence claims were not checked against `unavailable` evidence.
+- **Model mismatch (historical):** the model that passed the preflight (`gemini-3.6-flash`) differed from the
+  code default at the time (`gemini-3.8-flash`). **Status now:** since `1955903` the single configured default is
+  `gemini-3.6-flash` (section 21 `MODEL_OVERRIDE`), and approval is bound to the model and SDK.
 - **SDK version:** the Colab SDK (2.12.1) is older than the version the adapter was checked against offline (2.31.0).
 
 ## Recovery and reconciliation (2026-10-16)
@@ -114,7 +118,8 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   | LR, artifact-normalized (primary) | 0.991 | 0.007 | 0.9998 | 4 / 0 |
   | NB, artifact-normalized | 0.978 | 0.000 | 0.9999 | 0 / 10 |
 
-  These scores measure separation between two corpora, **not** real-world phishing detection.
+  Because source and class are perfectly confounded, these scores cannot be attributed to generalizable
+  phishing detection.
   Removing the known artifacts barely changed them, and residual corpus cues remain. See `docs/MODEL_EVALUATION.md`.
 - **Tests:** `pytest tests` → 33 passed (local, offline).
 

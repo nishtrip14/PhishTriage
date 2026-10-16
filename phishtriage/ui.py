@@ -66,10 +66,20 @@ class TriageSession:
     def __init__(self, tools, *, settings=None, preflights=None, config=None, run_info=None,
                  live_adapter_factory=A.make_live_adapter, replay_factory=AR.replay_adapter, runner=A.run_triage):
         self.tools, self.store = tools, tools.store
-        self.settings, self.preflights = settings, preflights
+        # settings / preflights may be objects or zero-argument callables. Callables are re-read on every use, so
+        # re-running the configuration cell (model change, new preflight) applies without rebuilding the interface.
+        self._settings, self._preflights = settings, preflights
         self.config, self.run_info = config or A.AgentConfig(), run_info or {}
         self.live_adapter_factory, self.replay_factory, self.runner = live_adapter_factory, replay_factory, runner
         self.busy, self.attempts = False, []
+
+    @property
+    def settings(self):
+        return self._settings() if callable(self._settings) else self._settings
+
+    @property
+    def preflights(self):
+        return self._preflights() if callable(self._preflights) else self._preflights
 
     # -- gating
     def live_status(self) -> tuple[bool, str]:
@@ -118,21 +128,21 @@ class TriageSession:
                 raise InputError(f"unknown mode {mode!r}")
             if mode == "replay" and source != "synthetic":
                 raise InputError("scripted replay only works for its predefined synthetic examples")
-            approval = None
+            approval, settings = None, self.settings          # one snapshot for this whole attempt
             if mode == "live":
                 ok, why = self.live_status()
                 if not ok:
                     raise InputError(f"live mode unavailable: {why}")
                 if not live_acknowledged:
                     raise InputError("tick the acknowledgement before sending content to the API provider")
-                approval = self.preflights.approval_for(self.settings)
+                approval = self.preflights.approval_for(settings)
             n = len(self.attempts) + 1
             attempt_id = f"attempt-{n:03d}-{uuid.uuid4().hex[:6]}"
             case_id = f"ui-{attempt_id}"
             case = self.build_case(source, subject, body, eml_bytes, synthetic_name, case_id=case_id)
             adapter = None
             if mode == "live":
-                adapter, reason = self.live_adapter_factory(approval, self.settings)
+                adapter, reason = self.live_adapter_factory(approval, settings)
                 if adapter is None:
                     raise InputError(f"live mode unavailable: {reason}")
             elif mode == "replay":
@@ -211,7 +221,7 @@ def render_attempt_html(attempt: Attempt, store, stale: bool = False) -> str:
     parts.append("<h4>Classifier (unchanged by the agent)</h4>"
                  f"<div>{esc(c.get('model_id'))}: <b>{esc(c.get('predicted_label'))}</b>, score {esc(score)} "
                  f"(uncalibrated model estimate, threshold {esc(thr)}). Trained on a source-confounded benchmark; "
-                 "not real-world accuracy.</div>")
+                 "its test score does not demonstrate real-world accuracy.</div>")
     if r.assessment:
         note = " (not proof that the email is safe)" if r.assessment == "no_strong_indicators" else ""
         parts.append(f"<h4>Agent assessment</h4><div><b>{esc(r.assessment)}</b>{esc(note)}</div>")

@@ -46,7 +46,7 @@ LIMITATIONS = [
     "'no_strong_indicators' means the available evidence showed no strong phishing indicators. "
     "It does NOT mean the email is safe.",
     "The classifier score is an uncalibrated estimate from a model trained on a source-confounded benchmark "
-    "(Nazario phishing vs SpamAssassin ham); it is not real-world accuracy.",
+    "(Nazario phishing vs SpamAssassin ham); its test performance does not demonstrate real-world accuracy.",
     "Playbooks are EXAMPLE POLICY guidance, not proof of phishing and not institutional policy.",
     "Email content is handled as untrusted data. This reduces, but does not eliminate, prompt-injection risk.",
     "The reviewer is a second model pass plus deterministic checks, not an independent guarantee of correctness.",
@@ -67,7 +67,7 @@ class AgentConfig:
     max_provider_retries: int = 2        # per run, shared by all requests; each retry is also a model request
     backoff_base_s: float = 2.0          # jittered exponential backoff for timeout / network / 5xx
     backoff_max_s: float = 8.0
-    max_retry_wait_s: float = 20.0       # a provider retry delay longer than this is not waited for
+    max_retry_wait_s: float | None = None  # optional extra cap on a single wait; None = only the budgets decide
     finish_reserve_s: float = 20.0       # investigation stops early to keep this much time for finalize + review
     max_revisions: int = 1
     email_prompt_chars: int = 6000
@@ -394,8 +394,8 @@ class _Run:
         return None
 
     def _backoff(self, e: ProviderError, attempt: int) -> float | None:
-        if e.retry_delay_s is not None:                     # honour the provider's delay, plus a little jitter
-            if e.retry_delay_s > self.cfg.max_retry_wait_s:
+        if e.retry_delay_s is not None:   # the provider's minimum wait is never shortened; jitter only adds time
+            if self.cfg.max_retry_wait_s is not None and e.retry_delay_s > self.cfg.max_retry_wait_s:
                 return None
             return e.retry_delay_s + self.rng.uniform(0, min(1.0, 0.1 * e.retry_delay_s + 0.1))
         cap = min(self.cfg.backoff_max_s, self.cfg.backoff_base_s * 2 ** (attempt - 1))
@@ -425,7 +425,7 @@ class _Run:
                     wait = self._backoff(e, attempt + 1)
                     needed_after_wait = self.cfg.min_request_window_s + (
                         self.cfg.finish_reserve_s if kind == "investigate" else 0.0)
-                    why_not = ("provider retry delay exceeds the wait limit" if wait is None else
+                    why_not = ("provider retry delay exceeds the configured wait cap" if wait is None else
                                self._fits(kind) or (None if self.remaining() - wait >= needed_after_wait
                                                     else "retry wait would exceed the deadline"))
                     if why_not is not None and kind == "investigate":
