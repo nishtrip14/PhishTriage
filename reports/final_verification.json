@@ -1,9 +1,9 @@
 {
-  "code_commit": "19559032b9b8495544460ffe06f7d3f3f9f3a898",
+  "code_commit": "f6642c99cbf61365ec173edbc3de5a3b1252487c",
   "code_modified": false,
   "environment": "local",
   "requested_revision": "local working tree",
-  "run_at_utc": "2026-10-16T09:59:17Z",
+  "run_at_utc": "2026-10-16T10:10:12Z",
   "versions": {
     "python": "3.13.7",
     "scikit-learn": "1.9.1",
@@ -17,10 +17,40 @@
   "dirty_files": [],
   "configured_model": "gemini-3.6-flash",
   "preflight_status_this_runtime": "skipped_opt_in_required",
-  "live_attempts_this_runtime": 0,
-  "live_cases_completed_this_runtime": 0,
+  "live_outcomes_this_runtime": {
+    "section_26": {
+      "attempted": 0,
+      "approved": 0,
+      "needs_human_review": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "interface": {
+      "attempted": 0,
+      "approved": 0,
+      "needs_human_review": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "total": {
+      "attempted": 0,
+      "approved": 0,
+      "needs_human_review": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    "definitions": {
+      "attempted": "submitted to the live workflow",
+      "approved": "report approved by the reviewer (not a guarantee of correctness)",
+      "needs_human_review": "report returned for human review (includes partial results)",
+      "failed": "failure report or internal error; never counted as completed",
+      "skipped": "not submitted because an earlier case stopped the batch"
+    }
+  },
+  "section_26_live_batches_this_runtime": 0,
+  "interface_attempts_by_mode": {},
   "offline_interface_checks_passed": true,
-  "widget_rendering_verified": "only by a person viewing section 28 in Colab",
+  "widget_rendering": "UNVERIFIED: no person confirmation recorded",
   "notes": [
     "replay records are scripted, not live",
     "classifier scores are uncalibrated and source-confounded"

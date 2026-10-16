@@ -1,9 +1,9 @@
 {
   "environment": "local",
-  "code_commit": "19559032b9b8495544460ffe06f7d3f3f9f3a898",
+  "code_commit": "f6642c99cbf61365ec173edbc3de5a3b1252487c",
   "code_modified": false,
   "requested_revision": "local working tree",
-  "run_at_utc": "2026-10-16T09:59:17Z",
+  "run_at_utc": "2026-10-16T10:10:12Z",
   "agent_version": "1.0",
   "budgets": {
     "max_tool_rounds": 3,
@@ -18,7 +18,7 @@
     "max_provider_retries": 2,
     "backoff_base_s": 2.0,
     "backoff_max_s": 8.0,
-    "max_retry_wait_s": 20.0,
+    "max_retry_wait_s": null,
     "finish_reserve_s": 20.0,
     "max_revisions": 1,
     "email_prompt_chars": 6000

@@ -24,8 +24,9 @@ Small, non-sensitive evidence only. No message text, raw data or model binaries.
 - Phase 1–2 files: code commit `e19b8cc`, clean tree. Re-running at `86993a3` reproduced them exactly, apart from
   timings, so they were left unchanged.
 - Phase 3 files: code commit `86993a3`, clean tree. Reproduced exactly at `30a2378`.
-- Phase 3–5 files (`phase3_summary`, `phase4_summary`, `phase5_verification`, `final_verification`): code commit
-  `1955903`, clean tree, local, live flags off. The phase 3 counts changed by design: `observed_absent` and
+- `phase3_summary`: code commit `1955903` (reproduced at `f6642c9`). `phase4_summary`, `phase5_verification`,
+  `final_verification`: code commit `f6642c9`, clean tree, local, live flags off. Widget rendering is recorded
+  as UNVERIFIED. The phase 3 counts changed by design: `observed_absent` and
   `cue_scan` were added.
 - `colab_run_9acefcb.json`: genuine Colab outputs at code `9acefcb` (run B in `docs/MODEL_EVALUATION.md`). The
   differences from the local run are observed across environments; the cause is not established.

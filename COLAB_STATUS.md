@@ -25,7 +25,7 @@ below follow the owner's prompts.
 | 2 Classifier | done | yes | yes (reproduced exactly) | **yes** (thresholds and a few error counts differ from the local run; cause not established) | n/a |
 | 3 Evidence, retrieval, tools | done | yes | yes | **yes** (results identical) | preflight **user-reported `ok`** (`gemini-3.6-flash`, SDK 2.12.1); not in any recovered notebook |
 | 4 Agents | done (+ quota/batch fixes `e635833`) | yes | yes, at `e635833` and `1955903` | **yes, offline paths only** (replay and evidence-only at `9acefcb`) | **user-reported historical results** (below); code revision not recorded; `e635833`+ not run live |
-| 5 Reliability, grounding, config, interface, export | done (`1955903`) | yes: 115 passed (google-genai 2.31.0); 114 passed + 1 skipped (2.12.1, no ipywidgets there) | yes, sections 0–30 at `1955903` (clean); frozen evaluation reproduced | **not yet** (widgets need a person to view them in Colab) | **not yet** |
+| 5 Reliability, grounding, config, interface, export | done (`1955903`, prep fixes `f6642c9`) | yes: 119 passed (google-genai 2.31.0); 118 passed + 1 skipped (2.12.1, no ipywidgets there) | yes, sections 0–30 at `f6642c9` (clean); frozen evaluation reproduced | **not yet** (widgets need a person to view them in Colab) | **not yet** |
 
 - **Local:** this Mac (Python 3.13.7, pandas 3.0.6, scikit-learn 1.9.1).
 - **Colab:** Python 3.13.16, pandas 2.2.3, scikit-learn 1.6.1, 2 CPUs. The outputs were saved in commit
@@ -48,7 +48,8 @@ below follow the owner's prompts.
 | *not recorded* | Section 21 preflight and section 26 live agent | Google Colab | **user-reported** only (below); no executed notebook recovered |
 | `e635833` | Quota/batch fixes; 89 offline tests; notebook sections 0–27 (live skipped) | local Mac | test output in this session; `reports/phase4_summary.json` |
 | `9283ce1`, `17826ac` | Documentation and evidence only (no code change from `e635833`) | n/a | |
-| `1955903` | Phase 5 code; 115 offline tests; notebook sections 0–30 (live flags off) | local Mac | `reports/phase5_verification.json`, `reports/final_verification.json` |
+| `1955903` | Phase 5 code; 115 offline tests; notebook sections 0–30 (live flags off) | local Mac | superseded by `f6642c9` evidence |
+| `f6642c9` | Final-verification prep: status-based live counts, config propagation, full provider delays; 119 offline tests; notebook sections 0–30 (live flags off) | local Mac | `reports/final_verification.json`, `reports/phase5_verification.json`, `reports/phase4_summary.json` |
 
 **Updated code (`e635833` and later, including `1955903`) still needs a fresh Colab run**, offline and live.
 
@@ -178,13 +179,14 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   runtime, so artifacts are never moved across versions.
 
 ## Checkpoint (2026-10-16, after phase 5)
-- **Branch:** `phishtriage-colab`. The phase 5 code is `1955903`; the evidence and docs commit follows it (see
-  `git log`). `main` is untouched at `170260b`.
-- **Notebook:** 70 cells, sections 0–30, outputs cleared, `RUN_LLM_PREFLIGHT`, `RUN_LIVE_AGENT` and
-  `RUN_ALL_LIVE_CASES` all `False`. *Run all* never calls the API or waits for input.
+- **Branch:** `phishtriage-colab`. The latest code is `f6642c9` (final-verification prep, on top of phase 5
+  `1955903`); the evidence commit follows it (see `git log`). `main` is untouched at `170260b`.
+- **Notebook:** 70 cells, sections 0–30, outputs cleared, `RUN_LLM_PREFLIGHT`, `RUN_LIVE_AGENT`,
+  `RUN_ALL_LIVE_CASES` and `WIDGETS_CONFIRMED_BY_PERSON` all `False`. *Run all* never calls the API or waits for input.
 - **Configured live model:** `gemini-3.6-flash` (section 21 `MODEL_OVERRIDE` to change it; a new preflight is
   then required).
-- **Tests:** 115 offline tests pass (google-genai 2.31.0); 114 pass + 1 skipped on google-genai 2.12.1.
+- **Tests:** 119 offline tests pass (google-genai 2.31.0); 118 pass + 1 skipped on google-genai 2.12.1.
+- **Widget rendering in Colab:** UNVERIFIED until a person confirms it in section 30.
 - **Unchanged:** the frozen phase 2 configurations, thresholds and reports, and the split manifest. Re-runs
   reproduce them exactly.
 
