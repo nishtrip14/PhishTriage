@@ -14,6 +14,7 @@ Small, non-sensitive evidence only. No message text, raw data or model binaries.
 | `retrieval_check.json` | Phase 3 retrieval check-set results (16 predeclared queries) |
 | `phase3_summary.json` | Phase 3 tool failure checks, synthetic demo evidence counts, pipeline summary, LLM preflight status |
 | `phase4_summary.json` | Phase 4 runs kept separate by mode: scripted replay (not live), evidence-only, live (skipped so far) |
+| `colab_run_9acefcb.json` | Sanitized, text-free extract of the **genuine Colab run** (outputs saved in `f2b7277`, code `9acefcb`): environment, partitions, phase 2 tables, retrieval and phase 3/4 summaries |
 | `figures/*.png` | Class balance, text length, test PR curves, test confusion matrices |
 | `PhishTriage_Colab_Executed.ipynb` | *Not created yet.* A sanitized copy of the notebook after a **genuine** fresh-runtime Colab run. Its outputs must never be fabricated. |
 
@@ -21,6 +22,7 @@ Small, non-sensitive evidence only. No message text, raw data or model binaries.
 - Phase 1–2 files: code commit `e19b8cc`, clean tree. Re-running at `86993a3` reproduced them exactly, apart from
   timings, so they were left unchanged.
 - Phase 3 files: code commit `86993a3`, clean tree. Reproduced exactly at `30a2378`.
-- Phase 4 file: code commit `30a2378`, clean tree. Replay and evidence-only only; no live run.
+- Phase 4 file: code commit `e635833`, clean tree. Replay and evidence-only only; no live run.
+- `colab_run_9acefcb.json`: genuine Colab outputs (scikit-learn 1.6.1); see `docs/MODEL_EVALUATION.md` for the small threshold and metric differences.
 
-Colab-generated versions will replace these once a Colab run is supplied.
+The local reports stay canonical. Colab evidence is kept alongside them, not swapped in.

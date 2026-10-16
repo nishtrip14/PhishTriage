@@ -66,12 +66,20 @@ Mark a new command as verified only after running it.
 - External LLM calls are opt-in. Read `GEMINI_API_KEY` from Colab Secrets only, and never print or commit it.
   Phase 4 uses the official `google-genai` SDK (CrewAI was rejected over dependency conflicts).
 
+## Handoff rules
+- Never treat an assistant transcript or saved execution counts as evidence. Verify files, commits and test
+  output. Runtime-only edits are recovered with `docs/colab_recovery_cell.py`, or reimplemented and labelled as such.
+- Raw imported notebooks and archives stay untracked in `colab_import/`; only sanitized, text-free extracts go
+  in `reports/`.
+- Before committing the canonical notebook, reset API flags (`RUN_LLM_PREFLIGHT`, `RUN_LIVE_AGENT`) to False.
+
 ## Agent rules
 - Agents use only the four read-only tools, with the case bound by application code. No mailbox access, sending,
   deleting, link visits, attachment execution or autonomous remediation.
 - Classifier fields in reports come from trusted state only. Replay output is never live-agent validation, and
   `no_strong_indicators` is never "safe".
-- Keep the budgets (3 rounds, 5 tools, 6 requests, 90 s) unless the owner asks to change them. SDK retries stay off.
+- Keep the budgets (3 rounds, 5 tools, 6 requests, 90 s) unless the owner asks to change them. SDK retries stay
+  off, and quota (429) is never retried. Run multiple live cases through `run_batch_triage`, which stops on quota.
 - Add phase cells to the notebook by appending or editing in place; preserve existing cell IDs.
 
 ## Status tracking

@@ -91,6 +91,24 @@ Artifacts (`model.joblib` + `manifest.json`, 2–3.5 MB each) stay in the workin
 checks the SHA-256, the preprocessing version and the scikit-learn minor version, and raises `ArtifactError`
 otherwise. **Primary model for later agent tools** (declared before the test run): LR on artifact-normalized text.
 
+## Colab reproduction (genuine Colab run, outputs saved in commit `f2b7277`)
+Sections 0–27 ran in Google Colab at code commit `9acefcb`, with Python 3.13.16, **scikit-learn 1.6.1**, pandas
+2.2.3 and 2 CPUs. The data, the near-duplicate groups and the split reproduced exactly (same manifest SHA-256).
+The selected hyperparameters were the same, but the learned thresholds and a few error counts differ from the
+committed local run (scikit-learn 1.9.1):
+
+| Model | Threshold (local → Colab) | Test FP / FN (local → Colab) | Test F1 (local → Colab) | AP (local → Colab) |
+|---|---|---|---|---|
+| LR, original | 0.550 → 0.549 | 0/4 → 0/3 | 0.991 → 0.994 | 0.9995 → 0.9995 |
+| NB, original | 0.409 → 0.469 | 3/2 → 3/2 | 0.989 → 0.989 | 0.9973 → 0.9973 |
+| **LR, artifact-normalized (primary)** | 0.261 → 0.255 | 4/0 → 4/0 | 0.991 → 0.991 | 0.9998 → 0.9998 |
+| NB, artifact-normalized | 0.929 → 0.847 | 0/10 → 1/4 | 0.978 → 0.989 | 0.9999 → 0.9999 |
+
+The committed reports remain the local run. Neither run was retuned. Colab retrains in its own runtime, so its
+artifacts carry its own thresholds and manifests. The differences are within the noise already noted (a handful
+of errors) and do not change any conclusion. Results are **version-dependent**, so record the environment with
+any number you quote. Raw evidence: `reports/colab_run_9acefcb.json` (sanitized extract).
+
 ## Validity limitations still open
 1. Source = label in every split. No external or unseen-source validation exists yet. One focused search on
    2026-10-15 found only feature-only, URL-only, SMS or LLM-generated sets, or sets that reuse Nazario.

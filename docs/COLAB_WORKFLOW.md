@@ -46,6 +46,19 @@ if the repository is private.
 3. Its source cells are compared with the canonical notebook, and its outputs are checked for secrets and
    personal data. Only then are results recorded in `COLAB_STATUS.md`, or a sanitized copy saved to `reports/`.
 
+## Recovering edits made inside a Colab runtime
+Edits made in `/content/PhishTriage` (for example by an assistant working in Colab) do not reach GitHub unless
+they are committed and pushed. A transcript saying "fixed" or "tests passed" is not evidence.
+- To recover such edits, paste `docs/colab_recovery_cell.py` into one cell of that **same** runtime and run it.
+- It is read-only:
+  - It verifies the checkout and its remote, then records the base commit, `git status` and `git diff`.
+  - It archives only changed or new source, test and doc files, plus loose `.py`/`.md` files in `/content` and
+    safe members of an optional handoff archive, with a manifest.
+  - It skips notebooks, data, models, caches and anything matching a secret pattern, and downloads the archive.
+  - It makes no API calls and no git writes.
+- Put the downloaded archive in `colab_import/`. It is inspected and reconciled, never extracted over the
+  repository.
+
 ## Producing the demonstration copy
 1. In Colab: *Runtime → Restart and run all* on the canonical notebook.
 2. Check that the outputs contain no secrets, tokens, personal email contents or absolute Drive paths.

@@ -13,11 +13,11 @@ print(A.format_report(result.report)); result.trace   # observable actions only
 ## Verification status (2026-10-15)
 | Aspect | Status |
 |---|---|
-| Implementation | Done (`1811f87`, `ae1d38b`, `30a2378`) |
-| Offline tests | `pytest tests`: **80 passed** (23 of them agent tests; scripted adapter and a fake Gemini client, network blocked) |
-| Local notebook execution | Sections 0–27 ran end to end at `30a2378` (clean tree); phases 1–3 outputs reproduced exactly |
-| Genuine Colab execution | **Not verified.** No executed Colab notebook or run output has been supplied |
-| Live provider (Gemini) | **Not verified.** No `GEMINI_API_KEY` here; the preflight and live agent have never run against the API |
+| Implementation | Done (`1811f87`, `ae1d38b`, `30a2378`); quota and batch fixes in `e635833` |
+| Offline tests | `pytest tests`: **89 passed** (agent and quota tests use a scripted adapter or a fake Gemini client; network blocked) |
+| Local notebook execution | Sections 0–27 ran end to end at `e635833` (clean tree); phase 1–3 outputs reproduced exactly |
+| Genuine Colab execution | **Yes, offline paths:** sections 0–27 ran in Colab at `9acefcb` (outputs saved in `f2b7277`). Replay and evidence-only results matched the local run; the live sections were skipped |
+| Live provider (Gemini) | **Not verified.** No evidenced preflight or live call; the saved Colab outputs show the preflight skipped |
 
 ## State transitions
 ```
@@ -98,6 +98,25 @@ not an independent guarantee.
   request name, status, time, evidence IDs and counters.
 - **Error mapping:** 401/403 → `auth`, 404 → `model_unavailable`, 429 → `quota`, 400 → `invalid_request`,
   5xx → `server`, timeouts → `timeout`. Non-retryable errors stop the run immediately.
+
+## Quota and batch behaviour (added in `e635833`)
+- **Quota (HTTP 429) is not retried.** The case ends after that request with `provider_quota`. An immediate retry
+  has no backoff, spends another request, and cannot clear daily or per-minute limits inside a 90-second run.
+  Timeout, network and 5xx errors still get one counted retry. The preflight also reports 429 as
+  `quota_exceeded` and never retries it.
+- **`run_batch_triage(tools, case_ids, mode, ...)`** runs cases one at a time. After a `provider_quota`,
+  `provider_auth` or `provider_model_unavailable` termination, later cases are **not submitted**. They are recorded
+  as `skipped_due_to_quota` / `skipped_due_to_provider_error`, and earlier results are unchanged.
+- Each `BatchEntry` has `.status` (`ran` or skipped), `.result` (an `AgentResult` or `None`) and `.report`
+  (`None` when skipped), so callers never have to guess the return type.
+- `TriageReport.termination_detail` explains failures, for example why the live preflight gate was not passed.
+  The gate itself is unchanged: live mode still needs `status == "ok"` for the same model in this runtime.
+- **Tests (`tests/test_quota_handling.py`):**
+  - The real `run_triage` and `GeminiAdapter` over a fake 429 client: exactly one or two provider calls, zero
+    retries, `provider_quota`, and no fabricated findings.
+  - A stubbed batch-control test.
+  - An unstubbed batch integration test.
+  - With the old retry-on-quota behaviour restored in-process, all three orchestration tests fail.
 
 ## Failure behaviour
 | Situation | Result |
