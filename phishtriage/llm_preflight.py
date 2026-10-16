@@ -1,13 +1,15 @@
 """Optional, opt-in runtime check that the Gemini API is reachable and returns function calls.
 
-Credentials come from Colab Secrets (GEMINI_API_KEY) or the environment. They are never printed, logged,
-returned or written to disk. The request uses synthetic, non-sensitive text only.
+Credentials come from Colab Secrets (GEMINI_API_KEY) or the environment. For local development only,
+`load_local_env` can copy them from the git-ignored project-root `.env` into the environment. They are never
+printed, logged, returned or written to disk. The request uses synthetic, non-sensitive text only.
 """
 from __future__ import annotations
 
 import os
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 # Explicit project default. gemini-3.6-flash is the model of the last user-reported successful preflight and
 # complete live case (google-genai 2.12.1); it is listed as stable on ai.google.dev/gemini-api/docs/models
@@ -36,6 +38,46 @@ def _redact(message: str, secret: str | None) -> str:
     if secret:
         message = message.replace(secret, "[REDACTED]")
     return re.sub(r"AIza[0-9A-Za-z_\-]{20,}", "[REDACTED]", message)[:500]
+
+
+LOCAL_ENV_NAMES = (KEY_NAME, MODEL_ENV)      # the only variables load_local_env copies from .env
+LOCAL_ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
+
+
+def _in_colab() -> bool:
+    try:
+        import google.colab  # type: ignore  # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def load_local_env(path: str | os.PathLike | None = None) -> dict:
+    """Local development only: copy GEMINI_API_KEY (and PHISHTRIAGE_GEMINI_MODEL) from the project-root `.env`.
+
+    Uses python-dotenv. A variable that is already set in the environment is never overwritten. In Colab this does
+    nothing, because the key comes from Colab Secrets. The result contains variable names only, never values.
+    """
+    result = {"status": None, "file": ".env", "loaded": [], "kept_existing": [], "error": None}
+    if _in_colab():
+        return {**result, "status": "skipped_colab"}
+    path = Path(path) if path is not None else LOCAL_ENV_PATH
+    if not path.is_file():
+        return {**result, "status": "no_env_file"}
+    try:
+        from dotenv import dotenv_values
+    except ImportError:
+        return {**result, "status": "dotenv_missing", "error": "python-dotenv is not installed: pip install python-dotenv"}
+    values = dotenv_values(path, interpolate=False)
+    for name in LOCAL_ENV_NAMES:
+        if not values.get(name):
+            continue
+        if os.environ.get(name):
+            result["kept_existing"].append(name)
+        else:
+            os.environ[name] = values[name]
+            result["loaded"].append(name)
+    return {**result, "status": "ok"}
 
 
 def get_api_key() -> str | None:
