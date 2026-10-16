@@ -22,7 +22,7 @@ SETUP_STEPS = [
     "Enable 'Notebook access' for that secret in this notebook. Never paste the key into a cell or chat.",
     "Set RUN_LLM_PREFLIGHT = True in the preflight cell and run it.",
 ]
-_NO_RETRY_CODES = {400, 401, 403, 404}
+_NO_RETRY_CODES = {400, 401, 403, 404, 429}
 
 
 def _redact(message: str, secret: str | None) -> str:
@@ -52,7 +52,7 @@ def preflight(enable_network: bool = False, model: str | None = None, api_key: s
     """Return a status dict; never raises for expected failures and never includes the key.
 
     status: skipped_opt_in_required | missing_credentials | sdk_missing | model_unavailable | auth_error |
-            api_error | tool_call_missing | ok
+            quota_exceeded | api_error | tool_call_missing | ok
     """
     model = model or os.environ.get(MODEL_ENV) or DEFAULT_MODEL
     result = {"status": None, "model": model, "sdk_version": None, "checks": [], "error": None,
@@ -74,17 +74,20 @@ def preflight(enable_network: bool = False, model: str | None = None, api_key: s
         return result
     result["sdk_version"] = getattr(genai, "__version__", "unknown")
 
-    retry = types.HttpRetryOptions(attempts=2, http_status_codes=[429, 500, 502, 503, 504])
+    retry = types.HttpRetryOptions(attempts=2, http_status_codes=[500, 502, 503, 504])   # never retry 429 quota
     http = types.HttpOptions(timeout=TIMEOUT_MS, retry_options=retry)
     client = (client_factory or genai.Client)(api_key=key, http_options=http)
 
     def fail(e, step):
         code = getattr(e, "code", None)
         status = ("model_unavailable" if code == 404 and step == "model_lookup" else
-                  "auth_error" if code in (401, 403) else "api_error")
+                  "auth_error" if code in (401, 403) else "quota_exceeded" if code == 429 else "api_error")
         hint = {"model_unavailable": f"Model '{model}' was not found. Check the current list at "
                                      f"ai.google.dev/gemini-api/docs/models and set {MODEL_ENV}.",
-                "auth_error": "The key was rejected or lacks access. Check the secret value and API enablement."}
+                "auth_error": "The key was rejected or lacks access. Check the secret value and API enablement.",
+                "quota_exceeded": "The account's quota or rate limit for this model is exhausted. Check usage limits "
+                                  "in Google AI Studio, wait for the limit to reset, or set "
+                                  f"{MODEL_ENV} to a model with available quota."}
         result.update(status=status, error=_redact(f"{step}: {type(e).__name__} {code or ''}: "
                                                    f"{getattr(e, 'message', None) or e}", key)
                       + (f" | {hint[status]}" if status in hint else ""))

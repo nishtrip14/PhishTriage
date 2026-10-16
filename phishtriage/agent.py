@@ -159,6 +159,7 @@ class TriageReport:
     limitations: list[str]
     usage: dict
     provider: dict
+    termination_detail: str = ""
     agent_version: str = AGENT_VERSION
     created_at: str = field(default_factory=utc_now)
 
@@ -455,7 +456,7 @@ def _classifier_block(tools: TriageTools, case_id: str, run: _Run) -> dict:
 
 
 def _report(run: _Run, *, status, termination, assessment=None, assessment_note="", draft=None, issues=(),
-            review=None) -> TriageReport:
+            review=None, detail="") -> TriageReport:
     findings, refs, actions, agent_missing = [], [], [], []
     bad_ids = {i["evidence_id"] for i in issues if i.get("evidence_id")}
     if draft:
@@ -482,7 +483,7 @@ def _report(run: _Run, *, status, termination, assessment=None, assessment_note=
         recommended_actions=actions, review=review or {"reviewer_status": "not_run", "rounds": 0,
                                                        "unresolved_objections": [], "validation_issues": list(issues)},
         limitations=list(LIMITATIONS), usage={**run.counters, "elapsed_s": elapsed, "budgets": asdict(run.cfg)},
-        provider=provider)
+        provider=provider, termination_detail=detail[:300])
 
 
 EVIDENCE_QUERY_TERMS = {   # evidence type -> fixed query phrase, priority order (from the phase 3 demonstration)
@@ -548,11 +549,17 @@ def run_triage(tools: TriageTools, case_id: str, mode: str = "evidence_only", ad
         return AgentResult(_report(run, status="failed", termination="replay_requires_scripted_adapter"), run.trace)
     if mode == "live":
         if adapter is None:
-            return AgentResult(_report(run, status="failed", termination="missing_credentials"), run.trace)
+            return AgentResult(_report(run, status="failed", termination="missing_credentials",
+                                       detail="no live adapter (GEMINI_API_KEY unavailable or not configured)"),
+                               run.trace)
         if provider == "scripted":
             return AgentResult(_report(run, status="failed", termination="live_mode_rejects_scripted_adapter"), run.trace)
         if not preflight or preflight.get("status") != "ok" or preflight.get("model") != getattr(adapter, "model", None):
-            return AgentResult(_report(run, status="failed", termination="preflight_not_passed"), run.trace)
+            detail = (f"preflight status {(preflight or {}).get('status')!r} for model "
+                      f"{(preflight or {}).get('model')!r}; live adapter model {getattr(adapter, 'model', None)!r}. "
+                      "Re-run section 21 with RUN_LLM_PREFLIGHT = True in this runtime.")
+            return AgentResult(_report(run, status="failed", termination="preflight_not_passed", detail=detail),
+                               run.trace)
 
     draft, issues, review_state = None, [], {"reviewer_status": "not_run", "rounds": 0, "unresolved_objections": [],
                                             "validation_issues": []}
@@ -629,7 +636,7 @@ def run_triage(tools: TriageTools, case_id: str, mode: str = "evidence_only", ad
             review_state["reviewer_status"] = "not_completed"
         return AgentResult(_report(run, status=status, termination=a.reason,
                                    assessment=draft["assessment"] if draft else None, draft=draft, issues=issues,
-                                   review=review_state), run.trace)
+                                   review=review_state, detail=a.detail), run.trace)
 
 
 # --------------------------------------------------------------------------- display
@@ -639,6 +646,8 @@ def format_report(report: TriageReport) -> str:
     lines.append(f"=== PhishTriage report: {r.case_id} ===")
     lines.append(f"MODE: {r.mode_notice}")
     lines.append(f"STATUS: {r.status.upper()}   (termination: {r.termination_reason})")
+    if r.termination_detail:
+        lines.append(f"  detail: {r.termination_detail}")
     c = r.classifier or {}
     score = "n/a" if c.get("score") is None else f"{c['score']:.3f}"
     thr = "n/a" if c.get("threshold") is None else f"{c['threshold']:.3f}"
@@ -684,7 +693,8 @@ def make_live_adapter(preflight: dict | None):
     from .agent_model import GeminiAdapter
     from .llm_preflight import get_api_key
     if not preflight or preflight.get("status") != "ok":
-        return None, f"live preflight has not passed in this runtime (status: {(preflight or {}).get('status')})"
+        return None, (f"live preflight has not passed in this runtime (status: {(preflight or {}).get('status')}; "
+                      f"{(preflight or {}).get('error') or 'run section 21 with RUN_LLM_PREFLIGHT = True'})")
     key = get_api_key()
     if not key:
         return None, "GEMINI_API_KEY is not available from Colab Secrets or the environment"
@@ -692,3 +702,56 @@ def make_live_adapter(preflight: dict | None):
         return GeminiAdapter(preflight["model"], key), None
     except ProviderError as e:
         return None, f"{e.kind}: {e.detail}"
+
+
+# --------------------------------------------------------------------------- batches
+
+# Terminations that describe the provider account rather than one case: later cases are not submitted.
+BATCH_STOP_TERMINATIONS = {"provider_quota": "skipped_due_to_quota",
+                           "provider_auth": "skipped_due_to_provider_error",
+                           "provider_model_unavailable": "skipped_due_to_provider_error"}
+
+
+@dataclass
+class BatchEntry:
+    """One case in a batch. status: 'ran' (see result.report.status for the outcome) or a skipped_* value."""
+    case_id: str
+    status: str
+    result: AgentResult | None = None
+    skip_reason: str = ""
+
+    @property
+    def report(self) -> TriageReport | None:
+        return self.result.report if self.result is not None else None
+
+
+@dataclass
+class BatchResult:
+    entries: list[BatchEntry]
+    stopped_early: bool
+    stop_reason: str | None
+
+    def summary(self) -> list[dict]:
+        return [{"case_id": e.case_id, "batch_status": e.status,
+                 "report_status": e.report.status if e.report else None,
+                 "termination": e.report.termination_reason if e.report else None,
+                 "skip_reason": e.skip_reason} for e in self.entries]
+
+
+def run_batch_triage(tools: TriageTools, case_ids: list[str], mode: str = "evidence_only", adapter=None,
+                     config: AgentConfig | None = None, preflight: dict | None = None,
+                     clock: Callable[[], float] = time.monotonic) -> BatchResult:
+    """Run cases one after another. A quota, authentication or unavailable-model termination stops the batch:
+    later cases are recorded as skipped and never submitted. Earlier results are kept unchanged."""
+    entries, stop = [], None
+    for case_id in case_ids:
+        if stop is not None:
+            entries.append(BatchEntry(case_id, BATCH_STOP_TERMINATIONS[stop],
+                                      skip_reason=f"not submitted: an earlier case ended with {stop}"))
+            continue
+        result = run_triage(tools, case_id, mode=mode, adapter=adapter, config=config, preflight=preflight,
+                            clock=clock)
+        entries.append(BatchEntry(case_id, "ran", result))
+        if result.report.termination_reason in BATCH_STOP_TERMINATIONS:
+            stop = result.report.termination_reason
+    return BatchResult(entries=entries, stopped_early=stop is not None, stop_reason=stop)

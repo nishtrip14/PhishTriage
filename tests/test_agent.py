@@ -202,7 +202,7 @@ def test_timeout_is_retried_once_then_reported(tools):
     assert res.report.findings == []                        # nothing fabricated
 
 
-@pytest.mark.parametrize("kind", ["auth", "model_unavailable", "invalid_request"])
+@pytest.mark.parametrize("kind", ["auth", "model_unavailable", "invalid_request", "quota"])
 def test_non_retryable_provider_errors_stop_immediately(tools, kind):
     res, adapter = run(tools, "case-ambiguous", [ProviderError(kind), text("never used")])
     assert res.report.termination_reason == f"provider_{kind}" and len(adapter.requests) == 1

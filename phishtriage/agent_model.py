@@ -14,7 +14,9 @@ from typing import Any, Callable, Literal
 ToolMode = Literal["auto", "none"]
 ProviderErrorKind = Literal["missing_credentials", "auth", "quota", "model_unavailable", "invalid_request",
                             "timeout", "network", "server", "empty_response", "sdk_missing", "script_exhausted"]
-RETRYABLE = {"timeout", "network", "server", "quota"}
+# Quota (429) is deliberately NOT retried: an immediate retry has no backoff, spends another request, and cannot
+# help with daily or per-minute limits inside one bounded run. The case stops with provider_quota instead.
+RETRYABLE = {"timeout", "network", "server"}
 
 
 class ProviderError(RuntimeError):
