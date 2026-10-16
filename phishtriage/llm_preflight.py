@@ -96,7 +96,7 @@ def get_api_key() -> str | None:
 
 
 def preflight(enable_network: bool = False, model: str | None = None, api_key: str | None = None,
-              client_factory=None) -> dict:
+              client_factory=None, max_attempts: int = 2) -> dict:
     """Return a status dict; never raises for expected failures and never includes the key.
 
     status: skipped_opt_in_required | missing_credentials | sdk_missing | model_unavailable | auth_error |
@@ -122,7 +122,8 @@ def preflight(enable_network: bool = False, model: str | None = None, api_key: s
         return result
     result["sdk_version"] = getattr(genai, "__version__", "unknown")
 
-    retry = types.HttpRetryOptions(attempts=2, http_status_codes=[500, 502, 503, 504])   # never retry 429 quota
+    # SDK-level retries for 5xx only (never 429). max_attempts=1 makes the generation check a single request.
+    retry = types.HttpRetryOptions(attempts=max(1, int(max_attempts)), http_status_codes=[500, 502, 503, 504])
     http = types.HttpOptions(timeout=TIMEOUT_MS, retry_options=retry)
     client = (client_factory or genai.Client)(api_key=key, http_options=http)
 
@@ -162,7 +163,7 @@ def preflight(enable_network: bool = False, model: str | None = None, api_key: s
         tool_config=types.ToolConfig(function_calling_config=types.FunctionCallingConfig(
             mode=types.FunctionCallingConfigMode.ANY, allowed_function_names=["record_check"])),
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-        temperature=0, max_output_tokens=MAX_OUTPUT_TOKENS)
+        max_output_tokens=MAX_OUTPUT_TOKENS)            # no temperature: see agent_model.GeminiAdapter.generate
     try:
         result["network_calls"] += 1
         response = client.models.generate_content(

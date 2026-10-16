@@ -325,6 +325,7 @@ def test_gemini_adapter_protocol_with_fake_client(no_network):
     cfg = seen["config"]
     assert cfg.automatic_function_calling.disable and cfg.http_options.retry_options.attempts == 1
     assert cfg.http_options.timeout == 7500 and cfg.tool_config.function_calling_config.mode.name == "AUTO"
+    assert cfg.temperature is None and cfg.thinking_config is None    # model defaults (Gemini 3 guidance)
 
     history = [AM.Message("user", text="hello"), AM.Message("model", native=model_turn),
                AM.Message("tool", function_responses=[{"id": "c1", "name": "inspect_email", "response": {"a": 1}},

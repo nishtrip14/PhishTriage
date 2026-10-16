@@ -210,7 +210,9 @@ class GeminiAdapter:
     def generate(self, req: ModelRequest) -> ModelTurn:
         t = self.types
         from google.genai import errors
-        cfg = dict(system_instruction=req.system, temperature=0, max_output_tokens=req.max_output_tokens,
+        # No temperature: Google's Gemini 3 guidance keeps the default, and the Gemini 3.8 Flash guide lists
+        # temperature/top_p/top_k as deprecated sampling parameters. Thinking level stays at the model default.
+        cfg = dict(system_instruction=req.system, max_output_tokens=req.max_output_tokens,
                    automatic_function_calling=t.AutomaticFunctionCallingConfig(disable=True),
                    http_options=t.HttpOptions(timeout=max(1000, int(req.timeout_s * 1000)),
                                               retry_options=t.HttpRetryOptions(attempts=1)))
@@ -230,6 +232,8 @@ class GeminiAdapter:
             # Read specific fields only; str(e) embeds the whole response body.
             raise classify_api_error(getattr(e, "code", None), getattr(e, "status", None),
                                      getattr(e, "details", None), getattr(e, "message", "") or "") from None
+        except ProviderError:
+            raise                                                 # e.g. refused by a request ledger: not sent
         except Exception as e:
             name = type(e).__name__
             kind = "timeout" if "Timeout" in name else "network" if any(k in name for k in ("Connect", "Network",
@@ -246,4 +250,5 @@ class GeminiAdapter:
         usage = {k: getattr(u, k, None) or 0 for k in ("prompt_token_count", "candidates_token_count",
                                                        "thoughts_token_count")} if u else {}
         return ModelTurn(function_calls=fcs, text=visible, native=cand.content, usage=usage,
-                         finish_reason=str(cand.finish_reason) if cand.finish_reason else None)
+                         finish_reason=str(getattr(cand.finish_reason, "value", cand.finish_reason))
+                         if cand.finish_reason else None)

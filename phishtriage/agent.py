@@ -367,7 +367,7 @@ class _Run:
         self.trace: list[dict] = []
         self.counters = {"model_requests": 0, "tool_rounds": 0, "tool_executions": 0, "rejected_tool_calls": 0,
                          "provider_retries": 0, "retry_wait_s": 0.0, "trusted_app_calls": 0, "prompt_tokens": 0,
-                         "output_tokens": 0}
+                         "output_tokens": 0, "thought_tokens": 0}
         self.executed: dict[str, list[str]] = {}
 
     # -- bookkeeping
@@ -441,10 +441,13 @@ class _Run:
                         continue
                     raise _Abort(f"provider_{e.kind}", f"{e.detail} (not retried: {why_not})")
                 raise _Abort(f"provider_{e.kind}", e.detail)
-            for k_in, k_out in (("prompt_token_count", "prompt_tokens"), ("candidates_token_count", "output_tokens")):
+            for k_in, k_out in (("prompt_token_count", "prompt_tokens"), ("candidates_token_count", "output_tokens"),
+                                ("thoughts_token_count", "thought_tokens")):
                 self.counters[k_out] += int(turn.usage.get(k_in, 0) or 0)
-            self.log("model_request", kind, "ok", started,
-                     code=f"{len(turn.function_calls)} function call(s)" if turn.function_calls else "text")
+            code = f"{len(turn.function_calls)} function call(s)" if turn.function_calls else "text"
+            if turn.finish_reason not in (None, "STOP"):          # e.g. MAX_TOKENS, MALFORMED_FUNCTION_CALL
+                code += f"; finish {turn.finish_reason}"[:60]
+            self.log("model_request", kind, "ok", started, code=code)
             return turn
 
     # -- tool execution (validated, bound to the case, deduplicated, budgeted)
