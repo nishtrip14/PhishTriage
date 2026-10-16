@@ -10,7 +10,7 @@ result = A.run_triage(tools, case_id, mode="evidence_only" | "replay" | "live", 
 print(A.format_report(result.report)); result.trace   # observable actions only
 ```
 
-## Verification status (2026-10-15)
+## Verification status
 | Aspect | Status |
 |---|---|
 | Implementation | Done (`1811f87`, `ae1d38b`, `30a2378`); quota and batch fixes in `e635833` |
@@ -33,7 +33,8 @@ START ─► trusted get_prediction (application)
         └─ otherwise, if a revision is left and ≥ 2 requests remain:
               REVISE (tools disabled) ─► VALIDATE ─► REVIEW ─► APPROVED | NEEDS_HUMAN_REVIEW
            else ─► NEEDS_HUMAN_REVIEW (review_unresolved | budget_exhausted)
-  any provider/deadline/budget abort ─► NEEDS_HUMAN_REVIEW (if a draft exists) or FAILED
+  budget or deadline exhausted ─► NEEDS_HUMAN_REVIEW (partial result)
+  provider abort ─► NEEDS_HUMAN_REVIEW (if a draft exists) or FAILED
 ```
 
 ## Report contract (`TriageReport`)
@@ -72,10 +73,10 @@ not an independent guarantee.
 |---|---|
 | Investigator tool rounds | 3 |
 | Tool executions | 5 (rejected calls are not executed; they count separately, with a limit of 4) |
-| Model requests | 6, including finalize, review, revision and retries; a revision is only started if a final review can follow |
-| Deadline | 90 s, checked before every request and tool execution; a request needs ≥ 2 s left |
+| Model requests | 6, including finalize, review, revision and retries. **Reserved capacity:** an investigation request (or its retry) needs 2 requests left over for finalize + review; finalize and revise need 1 left for review. Otherwise investigation ends early and the case finishes |
+| Deadline | 90 s, checked before every request, retry wait and tool execution; a request needs ≥ 2 s left; investigation stops when < 20 s + 2 s remain (`finish_reserve_s`) |
 | Per-request timeout | min(30 s, time remaining); the SDK HTTP timeout is in ms and SDK retries are off (`attempts=1`) |
-| Provider retries | 1, only for timeout, network, 5xx and 429; each retry counts as a request |
+| Provider retries | At most 2 per run, each counted as a request, and the wait counted against the deadline. See the retry policy below |
 | Output tokens | 1,024 for tool rounds and review, 2,048 for draft reports |
 | Email in prompt | first 6,000 characters (the tools still see the stored text) |
 
@@ -118,6 +119,62 @@ not an independent guarantee.
   - An unstubbed batch integration test.
   - With the old retry-on-quota behaviour restored in-process, all three orchestration tests fail.
 
+## Retry policy and diagnostics (phase 5)
+| Error | Policy |
+|---|---|
+| timeout, network, HTTP 5xx | Retry with jittered exponential backoff (base 2 s, cap 8 s). A provider `RetryInfo.retryDelay` is honoured if ≤ 20 s |
+| HTTP 429, classified as a **rate limit** by the error body (`rate_limit_exceeded`, `too_many_requests`, or a `QuotaFailure` quotaId with `PerMinute`/`PerSecond`) | Retry once the provider delay or backoff has passed, if the wait fits the deadline and request reservation |
+| HTTP 429, **daily** (`quota_exceeded`, quotaId `PerDay`) or **unclassified** | **Not retried.** The case ends with `provider_quota`, and `run_batch_triage` skips the later cases |
+| 401/403/404/400 | Not retried |
+
+- **Blocked retry during investigation:** if a retry would break the reservation or the deadline, investigation
+  ends and the case finishes with the evidence already gathered.
+- **SDK retries** stay disabled (`attempts=1`). The official Python SDK would otherwise retry up to four times
+  outside the budget.
+- **Diagnostics:** every provider error is recorded in `report.provider["errors"]` as
+  `{request, http_status, category, provider_status, quota_category, retry_delay_s}`. These are read from
+  specific fields only (`str(error)` embeds the whole response). Messages are redacted of keys, `projects/...`
+  identifiers and long numbers.
+
+## Evidence grounding (phase 5)
+- **The defect:** a user-reported live run approved a report claiming "no attachments" for pasted text, whose
+  attachment information was `unavailable`.
+- **New status:** evidence now distinguishes `observed_absent` ("checked, not found", with `value.scope`) from
+  `unavailable` ("not provided: unknown"). Examples of observed absence: no URL text in the provided text, no
+  attachment parts in a supplied `.eml`, or a header missing from a supplied `.eml`.
+- **`cue_scan`:** a new evidence item records which keyword cues were checked and which matched.
+- **Prompts:** the investigator and reviewer prompts state these meanings explicitly.
+- **Deterministic check (`ABSENCE_TOPICS`):** it looks for absence statements about attachments, URLs/links,
+  Reply-To and authentication results.
+  - It flags `absence_claim_on_unavailable_evidence`, `absence_claim_contradicts_evidence` and
+    `absence_claim_not_cited`. These are errors that block approval.
+  - It is a heuristic over common English phrasings. Paraphrases ("nothing was attached") are not caught, and a
+    test documents that limitation.
+- **Playbook fix:** PB-06 ("urgent or asks for action but may be genuine") does not fit the non-urgent, no-action
+  benign example. The benign replay now cites PB-07 (missing information) instead. PB-06 itself is unchanged.
+
+## Model configuration (phase 5)
+- **One setting:** `LLMSettings` (section 21: `MODEL_OVERRIDE`, else `$PHISHTRIAGE_GEMINI_MODEL`, else
+  `gemini-3.6-flash`) feeds the preflight, the live adapter, the interface and the reports.
+- **Approval:** `PreflightRegistry` keys approval by (model, installed google-genai version).
+  - A model or SDK change has no approval until its own preflight passes.
+  - An unchanged, approved configuration is reused without network calls.
+  - `make_live_adapter(approval, settings)` refuses a mismatch.
+- **Reports** show the model and SDK actually used (`provider.model`, `provider.sdk_version`).
+
+## Interface and export (phase 5)
+- **Logic:** `phishtriage.ui.TriageSession` holds input validation (source selection, bounded `.eml`),
+  mode gating, the live acknowledgement, the duplicate-submission guard, unique attempt and case IDs, the
+  stale-input fingerprint, and session-memory history.
+- **Widgets:** `build_interface()` only wires ipywidgets to it. Errors re-enable the controls, and displaying the
+  widgets runs nothing.
+- **Rendering:** `render_attempt_html` escapes every value and creates no links, images, scripts or iframes.
+  The trace is a native `<details>` element, and no model reasoning is shown.
+- **Export:** `phishtriage.export`. The default summary has structure only. The detailed export (opt-in) adds
+  model text and the escaped excerpts of cited evidence. The raw email body and attachments are never exported.
+  `verification_record()` holds the compact synthetic-run records (revision, model, SDK, mode, time, status,
+  termination, review, counters, elapsed).
+
 ## Failure behaviour
 | Situation | Result |
 |---|---|
@@ -126,7 +183,7 @@ not an independent guarantee.
 | Invalid JSON draft | one revision; then `needs_human_review`, or `failed` if no draft parses |
 | Invalid reviewer output | treated as an unresolved objection |
 | Unknown tool, bad arguments, cross-case IDs, duplicates, tool budget | the call is rejected with a structured error; nothing is executed |
-| Budget or deadline exhausted | an honest partial result with the reason |
+| Budget or deadline exhausted | `needs_human_review` (a partial result) with the reason; nothing is invented |
 | Unknown case | `failed`, `invalid_input`. Empty input is rejected earlier by `email_input`, and oversized input is truncated with a note |
 
 ## Synthetic demonstrations (replay, local run at `30a2378`)

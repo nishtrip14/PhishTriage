@@ -22,6 +22,10 @@ errors = pytest.importorskip("google.genai.errors")
 PHISH = ["verify your account password now or it will be suspended", "urgent confirm billing details today"] * 5
 LEGIT = ["minutes from the weekly team meeting", "lunch on friday let me know"] * 5
 MODEL = "gemini-test-model"
+
+
+def no_sleep(seconds):
+    pass
 PASSED = {"status": "ok", "model": MODEL}
 
 
@@ -48,13 +52,16 @@ class FakeModels:
     """Stands in for client.models: replays a list of outcomes (responses or exceptions) and counts calls."""
 
     def __init__(self, outcomes):
-        self.outcomes, self.calls = list(outcomes), 0
+        self.outcomes, self.calls, self.violations = list(outcomes), 0, []
 
     def generate_content(self, model, contents, config):
         self.calls += 1
-        assert config.http_options.retry_options.attempts == 1, "SDK-level retries must stay disabled"
+        if config.http_options.retry_options.attempts != 1:
+            self.violations.append("SDK-level retries enabled")
         if not self.outcomes:
-            raise AssertionError("provider called after the run should have stopped")
+            # Recorded, not raised: the adapter would turn an exception into a provider error and hide it.
+            self.violations.append("provider called after the run should have stopped")
+            raise RuntimeError("no scripted outcome")
         out = self.outcomes.pop(0)
         if isinstance(out, Exception):
             raise out
@@ -80,42 +87,50 @@ def live_adapter(outcomes):
 
 def test_quota_on_first_request_stops_the_case_without_retry(tools, no_network):
     adapter, models = live_adapter([quota_error(), function_call_response("inspect_email")])
-    result = A.run_triage(tools, "case-credential_link", mode="live", adapter=adapter, preflight=PASSED)
+    result = A.run_triage(tools, "case-credential_link", mode="live", adapter=adapter, preflight=PASSED,
+                          sleep=no_sleep)
     r = result.report
-    assert models.calls == 1                                  # no hidden or loop-level retry
+    assert models.calls == 1 and models.violations == []                                  # no hidden or loop-level retry
     assert r.usage["model_requests"] == 1 and r.usage["provider_retries"] == 0
     assert r.status == "failed" and r.termination_reason == "provider_quota"
     assert "429" in r.termination_detail
     assert r.assessment is None and r.findings == [] and r.recommended_actions == []    # nothing fabricated
     assert r.classifier["status"] == "ok"                     # trusted classifier result still reported
     requests = [t for t in result.trace if t["kind"] == "model_request"]
-    assert len(requests) == 1 and requests[0]["status"] == "error" and requests[0]["code"] == "quota"
+    assert len(requests) == 1 and requests[0]["status"] == "error" and requests[0]["code"] == "quota/unclassified"
+    assert r.provider["errors"] == [{"request": "investigate", "http_status": 429, "category": "quota",
+                                     "provider_status": "RESOURCE_EXHAUSTED", "quota_category": "unclassified",
+                                     "retry_delay_s": None}]
 
 
 def test_quota_mid_investigation_keeps_evidence_and_makes_no_further_calls(tools, no_network):
     adapter, models = live_adapter([function_call_response("inspect_email"), quota_error(),
                                     function_call_response("get_prediction")])
-    result = A.run_triage(tools, "case-credential_link", mode="live", adapter=adapter, preflight=PASSED)
+    result = A.run_triage(tools, "case-credential_link", mode="live", adapter=adapter, preflight=PASSED,
+                          sleep=no_sleep)
     r = result.report
-    assert models.calls == 2 and len(models.outcomes) == 1   # the third outcome was never requested
+    assert models.calls == 2 and len(models.outcomes) == 1 and models.violations == []   # the third outcome was never requested
     assert r.usage["model_requests"] == 2 and r.usage["provider_retries"] == 0
     assert r.usage["tool_executions"] == 1 and r.termination_reason == "provider_quota" and r.status == "failed"
     executed = [t for t in result.trace if t["kind"] == "tool_call"]
     assert [t["name"] for t in executed] == ["inspect_email"] and executed[0]["status"] == "ok"
 
 
-def test_transient_server_error_is_still_retried_once(tools, no_network):
+def test_transient_server_errors_are_retried_within_the_run_limit(tools, no_network):
     server = errors.APIError(503, {"error": {"code": 503, "message": "unavailable (synthetic)"}})
-    adapter, models = live_adapter([server, server])
-    r = A.run_triage(tools, "case-ambiguous", mode="live", adapter=adapter, preflight=PASSED).report
-    assert models.calls == 2 and r.usage["provider_retries"] == 1 and r.termination_reason == "provider_server"
+    adapter, models = live_adapter([server, server, server])
+    waits = []
+    r = A.run_triage(tools, "case-ambiguous", mode="live", adapter=adapter, preflight=PASSED,
+                     sleep=waits.append).report
+    assert models.calls == 3 and models.violations == [] and len(waits) == 2
+    assert r.usage["provider_retries"] == 2 and r.termination_reason == "provider_server"
 
 
 def test_live_mode_still_requires_a_passed_preflight_for_the_same_model(tools, no_network):
     adapter, models = live_adapter([function_call_response("inspect_email")])
     for preflight in (None, {"status": "skipped_opt_in_required", "model": MODEL},
                       {"status": "quota_exceeded", "model": MODEL}, {"status": "ok", "model": "another-model"}):
-        r = A.run_triage(tools, "case-ambiguous", mode="live", adapter=adapter, preflight=preflight).report
+        r = A.run_triage(tools, "case-ambiguous", mode="live", adapter=adapter, preflight=preflight, sleep=no_sleep).report
         assert r.termination_reason == "preflight_not_passed" and "section 21" in r.termination_detail
     assert models.calls == 0
 
@@ -184,7 +199,7 @@ def test_batch_with_real_runs_and_a_quota_adapter(tools, no_network):
     """Integration (not stubbed): one shared live adapter; the quota on case 1 stops the rest."""
     adapter, models = live_adapter([quota_error()])
     names = ["case-credential_link", "case-ambiguous", "case-benign_notification"]
-    batch = A.run_batch_triage(tools, names, mode="live", adapter=adapter, preflight=PASSED)
-    assert models.calls == 1
+    batch = A.run_batch_triage(tools, names, mode="live", adapter=adapter, preflight=PASSED, sleep=no_sleep)
+    assert models.calls == 1 and models.violations == []
     assert [e.status for e in batch.entries] == ["ran", "skipped_due_to_quota", "skipped_due_to_quota"]
     assert batch.entries[0].report.termination_reason == "provider_quota"

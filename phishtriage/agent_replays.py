@@ -137,18 +137,23 @@ def _credential_script() -> list:
 
 
 def _benign_script() -> list:
+    # PB-06 ("urgent or asks for action but may be genuine") does not match this non-urgent, no-action notice,
+    # so the replay cites PB-07 for what is unknown about pasted text instead.
     def finalize(req):
         return text(draft("no_strong_indicators", [
-            finding("No URLs, credential requests or payment-change language were observed in the text.",
-                    evidence_ids(req, "urls")),
+            finding("No URL text was found in the provided subject and body, and the keyword scan matched no "
+                    "credential-request or payment-change wording.", evidence_ids(req, "urls"),
+                    evidence_ids(req, "cue_scan")),
+            finding("Attachments, sender identity and authentication results are unknown: pasted text does not "
+                    "include them.", evidence_ids(req, "attachments")),
             finding(classifier_statement(req), evidence_ids(req, "classifier_prediction")),
-        ], [dict(playbook(req, "PB-06") or {}, reason="routine notification without risky requests")]
-            if playbook(req, "PB-06") else [],
-            missing=["Sender identity and authentication results (pasted text only)"],
-            actions=[{"action": "Use the usual portal rather than any link if action is ever needed.",
-                      "playbook_refs": ["PB-06"] if playbook(req, "PB-06") else []}]))
+        ], [dict(playbook(req, "PB-07") or {}, reason="sender, authentication and attachment information is "
+                                                      "unavailable for pasted text")] if playbook(req, "PB-07") else [],
+            missing=["Original .eml with headers and attachment information"],
+            actions=[{"action": "Ask for the original message as an .eml file if the classifier warning matters.",
+                      "playbook_refs": ["PB-07"] if playbook(req, "PB-07") else []}]))
     return [calls(call("inspect_email"), call("get_prediction")),
-            calls(call("retrieve_playbook", query="legitimate routine notification no action required")),
+            calls(call("retrieve_playbook", query="missing information headers unavailable pasted text")),
             text("READY"), finalize, approve()]
 
 

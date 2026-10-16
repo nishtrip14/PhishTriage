@@ -148,7 +148,8 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
                       {"display_name_address": shown.lower(), "actual_address": from_addr}, "",
                       (HEADER_LIMIT, "Mailing lists and forwarding services can produce this legitimately."))
         else:
-            b.add("sender_address", "header:From", "unavailable", None, "", ("No parseable From header.", NOT_SAFETY))
+            b.add("sender_address", "header:From", "observed_absent",
+                  {"scope": "headers of the supplied .eml: no parseable From header"}, "", (HEADER_LIMIT, NOT_SAFETY))
         reply_to = [a for _, a in _addresses(case.headers, "Reply-To")]
         if reply_to:
             b.add("reply_to", "header:Reply-To", "observed", {"addresses": reply_to[:5],
@@ -161,7 +162,8 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
                       {"from_domain": fd, "reply_to_domains": mismatched}, "",
                       (HEADER_LIMIT, "Help desks, ticketing systems and mailing lists set Reply-To legitimately."))
         else:
-            b.add("reply_to", "header:Reply-To", "unavailable", None, "", ("No Reply-To header.",))
+            b.add("reply_to", "header:Reply-To", "observed_absent",
+                  {"scope": "headers of the supplied .eml: no Reply-To header"}, "", (HEADER_LIMIT,))
         for name in ("Return-Path", "Sender"):
             addrs = _addresses(case.headers, name)
             if addrs:
@@ -183,8 +185,9 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
                     b.add("conflicting_authentication_claims", "header:Authentication-Results", "unverified_claim",
                           {"mechanism": mech, "claimed_outcomes": outcomes}, "", (AUTH_LIMIT,))
         else:
-            b.add("authentication_results", "header:Authentication-Results", "unavailable", None, "",
-                  ("No Authentication-Results header in the input.", NOT_SAFETY))
+            b.add("authentication_results", "header:Authentication-Results", "observed_absent",
+                  {"scope": "headers of the supplied .eml: no Authentication-Results header"}, "",
+                  ("Many relays do not add this header; its absence says nothing about the sender.", NOT_SAFETY))
 
         if case.attachments:
             for att in case.attachments:
@@ -192,7 +195,11 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
                       ("Metadata only: the attachment was not opened, scanned, executed or extracted.",
                        "Content-Type and filename are sender-declared."))
         else:
-            b.add("attachments", "mime", "observed", {"count": 0}, "", ())
+            part_limited = any("MIME parts" in w or "attachments recorded" in w for w in case.parse_warnings)
+            b.add("attachments", "mime", "observed_absent",
+                  {"count": 0, "scope": "attachment parts among the MIME parts inspected in the supplied .eml"
+                                        + (" (part limit reached: later parts not inspected)" if part_limited else "")},
+                  "", ("Only the supplied .eml was inspected.", NOT_SAFETY))
 
     # ---- URLs (static) ----
     urls = extract_urls(text, [h for _, h in case.html_links])
@@ -200,8 +207,11 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
         b.add("url", "body" if url in text else "html:href", "observed", describe_url(url), escape_excerpt(url, 200),
               (URL_LIMIT,))
     if not urls:
-        b.add("urls", "body", "observed", {"count": 0}, "",
-              ("No URL text found in this input. Links may still exist in content that was not provided.",))
+        scope = "URL text in the subject and body as provided" + (" and HTML link targets" if case.html_links else "")
+        if any("truncated" in w for w in case.parse_warnings):
+            scope += " (input was truncated; the rest was not inspected)"
+        b.add("urls", "body", "observed_absent", {"count": 0, "scope": scope}, "",
+              ("Links may still exist in content that was not provided.", NOT_SAFETY))
     for anchor, href in case.html_links:
         shown = _DOMAINISH.match(anchor.strip())
         target = _safe_host(href) if re.match(r"(?i)^https?://", href or "") else None
@@ -211,11 +221,18 @@ def observe(case: CaseInput) -> tuple[EmailObservation, list[EvidenceItem]]:
                   escape_excerpt(anchor, 120), (URL_LIMIT, "Tracking and redirect services also cause this."))
 
     # ---- simple, explainable language cues ----
+    matched = []
     for cue, pattern in CUES.items():
         hits = sorted({m.group(0).lower() for m in re.finditer(pattern, text, re.I)})[:10]
         if hits:
+            matched.append(cue)
             b.add(cue, "subject+body", "observed", {"matched_phrases": hits}, "",
                   (INSTRUCTION_LIMIT if cue == "instruction_like_text" else KEYWORD_LIMIT,))
+    # One record of what the keyword scan covered, so "no credential request wording" can be cited precisely.
+    b.add("cue_scan", "subject+body", "observed",
+          {"checked": list(CUES), "matched": matched, "not_matched": [c for c in CUES if c not in matched],
+           "scope": "fixed keyword patterns over the subject and body text as provided"}, "",
+          (KEYWORD_LIMIT, "A pattern not matching does not mean the email lacks that intent."))
 
     for w in case.parse_warnings:
         b.add("parse_warning", "parser", "observed", {"warning": w[:300]}, "", ())

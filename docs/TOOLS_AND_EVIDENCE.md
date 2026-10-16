@@ -22,6 +22,11 @@ Frozen dataclasses with `to_dict()`, all JSON-serialisable.
 
 `ToolResult` enforces two rules: an `ok` result carries no error, and every non-ok result explains itself.
 
+**Phase 5 addition, `observed_absent`:** "checked and not found within `value.scope`". It separates observed
+absence (no URL text in the provided text; no attachment parts in a supplied `.eml`; a header missing from a
+supplied `.eml`) from `unavailable` (not provided: presence and absence are both unknown). A `cue_scan` item lists
+which keyword cues were checked and matched. `inspect_email` returns `status_meanings` with each result.
+
 ## Safe input (`phishtriage/email_input.py`)
 - **Pasted subject/body** is always supported. Empty input is rejected, and the result records that headers,
   sender identity, authentication results and attachments are unavailable.

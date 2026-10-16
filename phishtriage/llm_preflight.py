@@ -7,9 +7,15 @@ from __future__ import annotations
 
 import os
 import re
+from dataclasses import dataclass
 
-DEFAULT_MODEL = "gemini-3.8-flash"     # stable ID listed on ai.google.dev/gemini-api/docs/models (checked 2026-10-15)
+# Explicit project default. gemini-3.6-flash is the model of the last user-reported successful preflight and
+# complete live case (google-genai 2.12.1); it is listed as stable on ai.google.dev/gemini-api/docs/models
+# (checked 2026-10-16). gemini-3.8-flash (also listed stable) previously returned a high-demand server error.
+# Availability for a given account is never assumed: the preflight checks it in each runtime.
+DEFAULT_MODEL = "gemini-3.6-flash"
 MODEL_ENV = "PHISHTRIAGE_GEMINI_MODEL"
+_MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9.\-]{2,63}$")
 KEY_NAME = "GEMINI_API_KEY"
 SDK_VERIFIED = "2.31.0"               # google-genai version whose interface this module was checked against
 TIMEOUT_MS = 30_000
@@ -132,3 +138,58 @@ def preflight(enable_network: bool = False, model: str | None = None, api_key: s
     result.update(status="ok" if ok else "tool_call_missing",
                   error=None if ok else "The model did not return the expected function call.")
     return result
+
+
+# --------------------------------------------------------------------------- one configuration path
+
+def installed_sdk_version() -> str | None:
+    try:
+        from google import genai
+    except ImportError:
+        return None
+    return getattr(genai, "__version__", "unknown")
+
+
+@dataclass(frozen=True)
+class LLMSettings:
+    """The single source of the live model choice, used by preflight, adapter, interface and reports."""
+    model: str
+    provider: str = "gemini"
+
+    @classmethod
+    def resolve(cls, model: str | None = None) -> "LLMSettings":
+        """An explicit argument wins, then $PHISHTRIAGE_GEMINI_MODEL, then DEFAULT_MODEL. Never switches silently."""
+        chosen = (model or os.environ.get(MODEL_ENV) or DEFAULT_MODEL).strip()
+        if not _MODEL_ID.match(chosen):
+            raise ValueError(f"invalid model id {chosen!r}")
+        return cls(model=chosen)
+
+
+class PreflightRegistry:
+    """Preflight results for this runtime, keyed by (model, installed SDK version).
+
+    A model change or an SDK upgrade has no approval until its own preflight passes. An unchanged configuration
+    that already passed is reused without new network calls."""
+
+    def __init__(self):
+        self._results: dict[tuple, dict] = {}
+
+    def record(self, result: dict) -> dict:
+        self._results[(result.get("model"), result.get("sdk_version"))] = result
+        return result
+
+    def approval_for(self, settings: LLMSettings) -> dict | None:
+        r = self._results.get((settings.model, installed_sdk_version()))
+        return r if r and r.get("status") == "ok" else None
+
+    def latest_for(self, settings: LLMSettings) -> dict | None:
+        return self._results.get((settings.model, installed_sdk_version()))
+
+    def run(self, settings: LLMSettings, enable_network: bool = False, force: bool = False, **kwargs) -> dict:
+        cached = self.approval_for(settings)
+        if cached and not force:
+            return {**cached, "reused_from_cache": True, "network_calls": 0}
+        result = preflight(enable_network=enable_network, model=settings.model, **kwargs)
+        if result["status"] != "skipped_opt_in_required":
+            self.record(result)
+        return result

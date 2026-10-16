@@ -55,7 +55,8 @@ def test_oversized_inputs_are_bounded():
 def test_missing_headers_and_malformed_eml(no_network):
     case = E.parse_eml(b"this is not really an email\nno headers here")
     _, by_type, _ = evidence_of(case)
-    assert by_type["sender_address"].status == "unavailable"
+    # The .eml headers WERE inspected and contained no From: observed absence within a stated scope.
+    assert by_type["sender_address"].status == "observed_absent" and "scope" in by_type["sender_address"].value
     assert any("no recognised headers" in w for w in case.parse_warnings)
     with pytest.raises(E.EmailInputError):
         E.parse_eml(b"")

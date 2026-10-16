@@ -2,6 +2,7 @@
 
 All emails are synthetic. These tests check workflow behaviour, not detection accuracy."""
 import json
+import random
 import tempfile
 from pathlib import Path
 
@@ -39,7 +40,8 @@ def tools(artifact):
 
 def run(tools, case, steps, **cfg):
     adapter = ScriptedAdapter(steps)
-    res = A.run_triage(tools, case, mode="replay", adapter=adapter, config=A.AgentConfig(**cfg) if cfg else None)
+    res = A.run_triage(tools, case, mode="replay", adapter=adapter, config=A.AgentConfig(**cfg) if cfg else None,
+                       sleep=lambda s: None, rng=random.Random(0))       # no real waiting in tests
     return res, adapter
 
 
@@ -188,8 +190,12 @@ def test_model_request_budget_is_never_exceeded(tools):
     assert len(adapter.requests) == 5 == res.report.usage["model_requests"] <= 6
     assert [r.kind for r in adapter.requests][-2:] == ["finalize", "review"]
     assert res.report.status == "needs_human_review" and res.report.termination_reason == "budget_exhausted"
-    res, adapter = run(tools, "case-ambiguous", steps, max_model_requests=4)
-    assert len(adapter.requests) == 4 and res.report.termination_reason == "budget_exhausted"
+    # With only 4 requests, investigation stops after one round so that finalize AND review still fit.
+    short = [calls(call("inspect_email")), calls(call("get_prediction")), good_draft, revise]
+    res, adapter = run(tools, "case-ambiguous", short, max_model_requests=4)
+    assert [r.kind for r in adapter.requests] == ["investigate", "investigate", "finalize", "review"]
+    assert res.report.termination_reason == "budget_exhausted" and res.report.review["rounds"] == 1
+    assert any(t["kind"] == "budget_reserve" for t in res.trace)
 
 
 # ---------------------------------------------------------------- provider failures and malformed output
@@ -197,8 +203,9 @@ def test_model_request_budget_is_never_exceeded(tools):
 def test_timeout_is_retried_once_then_reported(tools):
     res, _ = run(tools, "case-ambiguous", [ProviderError("timeout", "slow")] + inspect_then_ready() + [good_draft, AR.approve()])
     assert res.report.status == "approved" and res.report.usage["provider_retries"] == 1
-    res, _ = run(tools, "case-ambiguous", [ProviderError("timeout"), ProviderError("timeout")])
+    res, _ = run(tools, "case-ambiguous", [ProviderError("timeout")] * 3)    # 2 retries per run, then stop
     assert res.report.status == "failed" and res.report.termination_reason == "provider_timeout"
+    assert res.report.usage["provider_retries"] == 2 and res.report.usage["model_requests"] == 3
     assert res.report.findings == []                        # nothing fabricated
 
 
@@ -215,7 +222,8 @@ def test_deadline_is_enforced(tools):
         return now[0]
     res = A.run_triage(tools, "case-ambiguous", mode="replay", clock=clock,
                        adapter=ScriptedAdapter(inspect_then_ready() + [good_draft, AR.approve()]))
-    assert res.report.termination_reason == "deadline_exceeded" and res.report.status == "failed"
+    assert res.report.termination_reason == "deadline_exceeded" and res.report.status == "needs_human_review"
+    assert res.report.findings == [] and res.report.assessment is None      # partial result, nothing invented
 
 
 def test_malformed_outputs_lead_to_revision_or_human_review(tools):

@@ -8,25 +8,94 @@ in one user turn, after the calls. Thought parts are never surfaced or logged.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Any, Callable, Literal
 
 ToolMode = Literal["auto", "none"]
 ProviderErrorKind = Literal["missing_credentials", "auth", "quota", "model_unavailable", "invalid_request",
                             "timeout", "network", "server", "empty_response", "sdk_missing", "script_exhausted"]
-# Quota (429) is deliberately NOT retried: an immediate retry has no backoff, spends another request, and cannot
-# help with daily or per-minute limits inside one bounded run. The case stops with provider_quota instead.
+# Transient failures that may be retried with bounded, jittered backoff (counted against request and time budgets).
 RETRYABLE = {"timeout", "network", "server"}
+# Quota (429): retried ONLY when the error body itself classifies it as a short-term rate limit. Daily or
+# unclassified quota stops the case (provider_quota), and run_batch_triage stops later submissions.
+QUOTA_CATEGORIES = ("rate_limit", "daily", "unclassified")
 
 
 class ProviderError(RuntimeError):
-    def __init__(self, kind: ProviderErrorKind, detail: str = ""):
+    def __init__(self, kind: ProviderErrorKind, detail: str = "", *, http_status: int | None = None,
+                 provider_status: str | None = None, quota_category: str | None = None,
+                 retry_delay_s: float | None = None):
         super().__init__(f"{kind}: {detail}"[:300])
         self.kind, self.detail = kind, detail[:300]
+        self.http_status, self.provider_status = http_status, provider_status
+        self.quota_category = quota_category if kind == "quota" else None
+        if self.kind == "quota" and self.quota_category is None:
+            self.quota_category = "unclassified"
+        self.retry_delay_s = retry_delay_s
 
     @property
     def retryable(self) -> bool:
-        return self.kind in RETRYABLE
+        return self.kind in RETRYABLE or (self.kind == "quota" and self.quota_category == "rate_limit")
+
+    def diagnostics(self) -> dict:
+        """Sanitized: status codes, categories and delay only. Never keys, prompts or account identifiers."""
+        return {"http_status": self.http_status, "category": self.kind, "provider_status": self.provider_status,
+                "quota_category": self.quota_category, "retry_delay_s": self.retry_delay_s}
+
+
+_ACCOUNT_IDS = re.compile(r"projects/[^\s,'\"]+|\b\d{6,}\b|AIza[0-9A-Za-z_\-]{20,}")
+
+
+def _sanitize(text: str, limit: int = 160) -> str:
+    return _ACCOUNT_IDS.sub("[redacted]", str(text or ""))[:limit]
+
+
+def _parse_delay(value) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):                                  # {"seconds": 37, "nanos": ...}
+        return float(value.get("seconds", 0)) + float(value.get("nanos", 0)) / 1e9
+    m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)s\s*", str(value or ""))  # protobuf Duration JSON, e.g. "37s"
+    return float(m.group(1)) if m else None
+
+
+def classify_api_error(code: int | None, status: str | None, body: Any, message: str = "") -> ProviderError:
+    """Map an HTTP error to a ProviderError. Quota is classified only from explicit fields in the error body:
+    an error code (rate_limit_exceeded / too_many_requests / quota_exceeded) or a QuotaFailure quotaId
+    (...PerMinute... / ...PerDay...). Anything else stays 'unclassified'. RetryInfo.retryDelay is honoured."""
+    err = body.get("error", body) if isinstance(body, dict) else {}
+    details = err.get("details", []) if isinstance(err, dict) else []
+    retry_delay, quota_ids = None, []
+    for d in details if isinstance(details, list) else []:
+        if not isinstance(d, dict):
+            continue
+        dtype = str(d.get("@type", ""))
+        if dtype.endswith("RetryInfo"):
+            retry_delay = _parse_delay(d.get("retryDelay"))
+        elif dtype.endswith("QuotaFailure"):
+            quota_ids += [str(v.get("quotaId", "")) for v in d.get("violations", []) if isinstance(v, dict)]
+    err_code = err.get("code") if isinstance(err, dict) and isinstance(err.get("code"), str) else None
+    quota_category = None
+    if code == 429:
+        if err_code == "quota_exceeded" or any("PerDay" in q for q in quota_ids):
+            quota_category = "daily"
+        elif err_code in ("rate_limit_exceeded", "too_many_requests") or any(
+                "PerMinute" in q or "PerSecond" in q for q in quota_ids):
+            quota_category = "rate_limit"
+        else:
+            quota_category = "unclassified"
+    kind = ({401: "auth", 403: "auth", 404: "model_unavailable", 429: "quota", 400: "invalid_request",
+             408: "timeout"}.get(code) or ("server" if code and code >= 500 else "invalid_request"))
+    detail = f"HTTP {code} {status or ''}".strip()
+    if quota_category:
+        detail += f" (quota: {quota_category})"
+    if retry_delay is not None:
+        detail += f" retry-after {retry_delay:g}s"
+    if message:
+        detail += f": {_sanitize(message)}"
+    return ProviderError(kind, detail, http_status=code, provider_status=status, quota_category=quota_category,
+                         retry_delay_s=retry_delay)
 
 
 @dataclass
@@ -111,6 +180,7 @@ class GeminiAdapter:
         if client is None and not api_key:
             raise ProviderError("missing_credentials", "GEMINI_API_KEY not available")
         self.model, self.types = model, types
+        self.sdk_version = getattr(genai, "__version__", "unknown")
         self.client = client or genai.Client(api_key=api_key, http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(attempts=1)))
 
@@ -157,10 +227,9 @@ class GeminiAdapter:
             resp = self.client.models.generate_content(model=self.model, contents=self.contents(req.history),
                                                        config=t.GenerateContentConfig(**cfg))
         except errors.APIError as e:
-            code = getattr(e, "code", None)
-            kind = {401: "auth", 403: "auth", 404: "model_unavailable", 429: "quota", 400: "invalid_request"}.get(
-                code, "server" if code and code >= 500 else "invalid_request")
-            raise ProviderError(kind, f"HTTP {code}: {getattr(e, 'message', '')}") from None
+            # Read specific fields only; str(e) embeds the whole response body.
+            raise classify_api_error(getattr(e, "code", None), getattr(e, "status", None),
+                                     getattr(e, "details", None), getattr(e, "message", "") or "") from None
         except Exception as e:
             name = type(e).__name__
             kind = "timeout" if "Timeout" in name else "network" if any(k in name for k in ("Connect", "Network",

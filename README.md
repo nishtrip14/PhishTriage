@@ -1,59 +1,74 @@
 # PhishTriage
 
-PhishTriage is an academic project that triages suspicious email for phishing risk.
-It runs entirely in **Google Colab**: no local backend, Docker or database server.
+PhishTriage is an academic project that triages suspicious email with a bounded, evidence-grounded agent workflow.
+It runs entirely in a **CPU Google Colab runtime**: there is no separate backend, database, Docker, mailbox
+integration or agent framework.
 
-**Status:** initial setup. See [COLAB_STATUS.md](COLAB_STATUS.md).
+**Open in Colab (development branch):**
+https://colab.research.google.com/github/nishtrip14/PhishTriage/blob/phishtriage-colab/notebooks/PhishTriage_Colab.ipynb
 
-## Run in Colab
+Status and verification by revision: [COLAB_STATUS.md](COLAB_STATUS.md). Demo steps:
+[docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
 
-1. Open `notebooks/PhishTriage_Colab.ipynb` in Colab
-   (*File → Open notebook → GitHub*, repository `nishtrip14/PhishTriage`,
-   branch `phishtriage-colab` or `main`).
-2. *Runtime → Run all*.
+## Run it
+* **API-free (default):** start a fresh CPU runtime, then *Runtime → Run all*. Nothing waits for input, and
+  nothing calls an LLM API.
+* **Live (optional):** add the `GEMINI_API_KEY` Colab Secret (key icon, *Notebook access* on; never paste the key
+  into a cell). Run the section 21 preflight with `RUN_LLM_PREFLIGHT = True`, then either section 26
+  (`RUN_LIVE_AGENT = True`, one synthetic case by default) or the section 28 interface in *Live* mode with the
+  acknowledgement ticked. The configured model is `gemini-3.6-flash` unless you set `MODEL_OVERRIDE`.
+* **Reproducible run:** set `PHISHTRIAGE_REVISION` (section 0) to a full commit SHA.
 
-Data is downloaded at runtime from Zenodo, checked against a pinned checksum, and never committed:
-Nazario phishing vs SpamAssassin legitimate mail, from the *Phishing Email Curated Datasets* record
-(10.5281/zenodo.8339691, CC-BY-4.0). See [docs/DATASET_CARD.md](docs/DATASET_CARD.md) for provenance,
-label mapping, audit counts and known confounds.
+## Architecture
+```
+Zenodo data (pinned SHA-256) ─► grouped splits ─► TF-IDF + logistic regression (selected before test)
+                                                              │ get_prediction
+pasted text / .eml ─► safe parsing ─► typed evidence ─────────┤ inspect_email, get_evidence
+example playbooks ─► separate TF-IDF retrieval ───────────────┘ retrieve_playbook
+                    ▼
+investigator (Gemini, bounded tool loop, case bound by the app) ─► draft report
+  ─► deterministic checks (citations, absence claims, classifier consistency)
+  ─► reviewer (separate request) ─► ≤ 1 revision ─► approved | needs human review | failed
+                    ▼
+ipywidgets interface (escaped output, stale-input guard) ─► JSON export (summary by default)
+```
 
-## Current results (local run, not yet verified in Colab)
-Two TF-IDF baselines (logistic regression, multinomial NB) score F1 ≈ 0.98–0.99 on the held-out test split,
-with original and artifact-normalized text alike. Because the phishing and legitimate emails come from different
-corpora, **this measures corpus separation, not real-world phishing-detection accuracy.**
-See [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md).
+**Agent limits:**
+* 3 tool rounds, 5 tool executions, 6 model requests (finalize and review capacity reserved), a 90-second
+  deadline.
+* Bounded, jittered retries for server errors (at most 2 per run). Quota is never retried immediately: daily or
+  unclassified quota stops the case, and a batch.
+* Three modes: **live**, **scripted replay** (labelled NOT live) and **evidence-only** (no LLM).
 
-**Evidence and tools (phase 3, local):** pasted or `.eml` input is inspected offline, with no URL fetching,
-HTML rendering or attachment opening. The results are typed evidence items marked observed, unverified claim,
-unavailable or error. Eight original *example* playbooks are searched with a separate TF-IDF index, and four
-read-only, typed tools (`get_prediction`, `inspect_email`, `retrieve_playbook`, `get_evidence`) are ready for
-the agent phase. See [docs/TOOLS_AND_EVIDENCE.md](docs/TOOLS_AND_EVIDENCE.md).
+## Honest evaluation
+* **Data:** Nazario phishing vs SpamAssassin ham (Zenodo 10.5281/zenodo.8339691, CC-BY-4.0); see
+  [docs/DATASET_CARD.md](docs/DATASET_CARD.md).
+* **Baselines:** two TF-IDF baselines reach test F1 ≈ 0.98–0.99. **Every phishing email comes from one corpus and
+  every legitimate email from another**, so these scores measure corpus separation, **not** real-world detection
+  accuracy. There is **no external validation**.
+* **Artifact sensitivity:** removing known collection artifacts barely changed the scores, and residual cues remain.
+* **Score type:** uncalibrated model estimates, not probabilities.
+* **Runs across environments:** a local run and a Colab run gave slightly different thresholds and error counts.
+  The cause is not established. See [docs/MODEL_EVALUATION.md](docs/MODEL_EVALUATION.md).
+* **Synthetic demos:** the demo emails are synthetic workflow tests, never accuracy evidence. For example, the
+  classifier labels the synthetic benign notification *phishing* (≈ 0.90), and the report shows that
+  disagreement with the agent.
 
-**Reproducible Colab runs:** set `PHISHTRIAGE_REVISION` (section 0) to a full commit SHA. The default
-`phishtriage-colab` branch moves with every push.
-
-**Agents (phase 4, local; not yet run live):** a bounded investigator chooses among the four tools for one
-application-bound case. Its draft goes through deterministic citation checks and a separate reviewer pass, with at
-most one revision; otherwise the case is marked *needs human review*. Modes: live Gemini (opt-in, gated by the
-preflight), clearly labelled scripted replay, and an evidence-only mode with no LLM. "No strong indicators" is
-never proof of safety. See [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md).
-
-Next stage: a notebook interface with report export ([COLAB_STATUS.md](COLAB_STATUS.md)).
+## Not claimed
+Production readiness; real-world accuracy; calibrated scores; immunity to prompt injection; that reviewer approval
+guarantees correctness; that "no strong indicators" means safe.
 
 ## Repository layout
-
 | Path | Purpose |
 |------|---------|
-| `notebooks/PhishTriage_Colab.ipynb` | Canonical development notebook (source of truth) |
-| `reports/PhishTriage_Colab_Executed.ipynb` | Sanitized, genuinely executed demo copy (created after a real Colab run) |
-| `phishtriage/` | Library code imported by the notebook: data, text, models, inference, evidence, retrieval, tools, agent |
-| `tests/` | Offline tests (`pytest tests`) |
-| `docs/DATASET_CARD.md`, `docs/MODEL_EVALUATION.md` | Data provenance and limitations; baseline evaluation |
-| `docs/TOOLS_AND_EVIDENCE.md` | Evidence schemas, safe input, playbooks, retrieval, tools, LLM preflight |
-| `docs/AGENT_WORKFLOW.md` | Agent state machine, report contract, budgets, modes, failure behaviour |
+| `notebooks/PhishTriage_Colab.ipynb` | Canonical notebook, sections 0–30 (outputs cleared, API flags off) |
+| `phishtriage/` | Package: data, text, models, inference, evidence, retrieval, tools, agent, llm_preflight, ui, export |
 | `phishtriage/playbooks/` | Example playbooks (labelled EXAMPLE POLICY) and the retrieval check set |
-| `docs/COLAB_WORKFLOW.md` | How to sync changes between GitHub and Colab safely |
-| `COLAB_STATUS.md` | Phase progress, evidence, blockers, next action |
-| `CLAUDE.md` | Project rules for AI-assisted development |
-
-Deadline for the Colab demonstration: **19 October 2026**.
+| `tests/` | Offline tests (`python -m pytest -q tests`); network access is blocked in the agent and provider tests |
+| `docs/DEMO_RUNBOOK.md` | Fresh-runtime setup, API-free and live demo paths, provider-failure fallback |
+| `docs/AGENT_WORKFLOW.md` | Agent states, report contract, budgets, retries, grounding, modes, interface |
+| `docs/TOOLS_AND_EVIDENCE.md` | Evidence statuses, safe input, playbooks, retrieval, tools, preflight |
+| `docs/DATASET_CARD.md`, `docs/MODEL_EVALUATION.md` | Data provenance and confounds; baseline evaluation per run |
+| `docs/COLAB_WORKFLOW.md`, `docs/colab_recovery_cell.py` | Syncing with Colab; read-only runtime recovery |
+| `reports/` | Small, text-free evidence files |
+| `COLAB_STATUS.md` | Verification matrix by revision, logs, checkpoint |

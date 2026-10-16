@@ -2,8 +2,11 @@
 
 Status vocabulary for evidence:
   observed          - present in the submitted input and read by a local, offline check
+  observed_absent   - checked and NOT found, within the scope stated in value["scope"] (e.g. "no attachment parts
+                      among the MIME parts of the supplied .eml"); absence is NOT evidence of safety
   unverified_claim  - present in the input but asserted by a party we cannot verify (e.g. Authentication-Results)
-  unavailable       - the information is absent from this input; absence is NOT evidence of safety
+  unavailable       - the information was not provided at all (e.g. pasted text has no headers or attachments), so
+                      nothing can be said about it - neither presence nor absence
   error             - a check failed; it never turns into a successful result
 """
 from __future__ import annotations
@@ -12,9 +15,16 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-EvidenceStatus = Literal["observed", "unverified_claim", "unavailable", "error"]
+EvidenceStatus = Literal["observed", "observed_absent", "unverified_claim", "unavailable", "error"]
 ToolStatus = Literal["ok", "unavailable", "error", "rejected"]
-EVIDENCE_STATUSES = ("observed", "unverified_claim", "unavailable", "error")
+EVIDENCE_STATUSES = ("observed", "observed_absent", "unverified_claim", "unavailable", "error")
+STATUS_MEANINGS = {
+    "observed": "present in the input (read by a local check)",
+    "observed_absent": "checked and not found within value.scope; not evidence of safety",
+    "unverified_claim": "present but asserted by an unverifiable party",
+    "unavailable": "not provided; presence or absence is UNKNOWN - never describe it as absent",
+    "error": "the check failed",
+}
 TOOL_STATUSES = ("ok", "unavailable", "error", "rejected")
 
 
