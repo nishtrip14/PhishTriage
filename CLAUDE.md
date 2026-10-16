@@ -88,5 +88,10 @@ Mark a new command as verified only after running it.
 - Interface and export: escape everything; summary exports carry no email text; the detailed export is opt-in.
   Submitted cases stay in session memory and are never committed.
 
+## Documentation map
+README.md (entry point) → docs/PROJECT_EXPLAINED.md → docs/ARCHITECTURE.md → docs/VERIFICATION.md (current
+matrix). Demo and viva: docs/DEMO_RUNBOOK.md, docs/PRESENTATION_GUIDE.md, docs/VIVA_QUESTIONS.md. Keep section
+numbers, variable names and test counts in these files synchronized with the notebook and the latest test run.
+
 ## Status tracking
 Update `COLAB_STATUS.md` after each phase, with evidence (a commit hash, a Colab run date, metrics).

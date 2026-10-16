@@ -16,7 +16,7 @@ below follow the owner's prompts.
 | 3 | Local evidence tools & playbook retrieval (RAG over a small, cited playbook corpus) | **Done; verified locally and in Colab (`9acefcb`).** Live preflight: user-reported `ok` (see below); revision not recorded. | `docs/TOOLS_AND_EVIDENCE.md`, `reports/retrieval_check.json`, `reports/phase3_summary.json`, code `86993a3` |
 | 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | **Implemented and offline-tested; replay and evidence-only verified in Colab (`9acefcb`).** User-reported live results exist (see below; revision not recorded). The quota/batch fixes (`e635833`) have not run in Colab. | `docs/AGENT_WORKFLOW.md`, `reports/phase4_summary.json`, `reports/colab_run_9acefcb.json`, code `e635833` |
 | 5 | Reliability, evidence grounding, model configuration, interface & export | **Implemented and offline-tested (`1955903`); local notebook run.** Colab widget rendering and live use of this code not yet verified | `docs/DEMO_RUNBOOK.md`, `docs/AGENT_WORKFLOW.md`, `reports/phase5_verification.json`, `reports/final_verification.json` |
-| 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | **Next.** Owner run in a fresh Colab runtime (see Next action) | |
+| 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | **Documentation complete; Colab evidence for the current code pending.** The owner reports a successful Colab *Run all* (2026-10-16), but the executed notebook was not supplied | `docs/VERIFICATION.md` |
 
 ## Verification matrix (as of 2026-10-16, phase 5)
 | Stage | Implementation | Offline tests | Local notebook run | Genuine Colab run | Live provider |
@@ -87,6 +87,16 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   code default at the time (`gemini-3.8-flash`). **Status now:** since `1955903` the single configured default is
   `gemini-3.6-flash` (section 21 `MODEL_OVERRIDE`), and approval is bound to the model and SDK.
 - **SDK version:** the Colab SDK (2.12.1) is older than the version the adapter was checked against offline (2.31.0).
+
+## Final engineering verification (2026-10-16)
+- **Owner report:** all notebook code ran successfully in Colab. **Evidence check:** no new executed notebook
+  in `colab_import/`, no PhishTriage files in Downloads, and no new commit on the remote. That run is therefore
+  **not recorded as evidence**; its revision, outputs, live statuses and widget confirmation are unknown here.
+- **Added:** README rewrite, `docs/PROJECT_EXPLAINED.md`, `docs/ARCHITECTURE.md`, `docs/PRESENTATION_GUIDE.md`,
+  `docs/VIVA_QUESTIONS.md`, `docs/VERIFICATION.md`, and an updated `docs/DEMO_RUNBOOK.md`.
+- **Focused tests** (`tests/test_data_rules.py`): label and exclusion rules, train-only fitting with dev-only
+  selection, `.eml` part and attachment limits. Full suite: 122 passed (2.31.0); 121 passed + 1 skipped (2.12.1).
+- **Current matrix:** [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Recovery and reconciliation (2026-10-16)
 - **Gemini's runtime work:** reported as a quota-abort patch in `agent.py`, `run_batch_triage`,
@@ -190,14 +200,9 @@ timestamps and executed notebook were not recorded, and none is inferred here.
 - **Unchanged:** the frozen phase 2 configurations, thresholds and reports, and the split manifest. Re-runs
   reproduce them exactly.
 
-## Next action (owner, in Colab, about 15 minutes)
-1. **Fresh CPU runtime:** set `PHISHTRIAGE_REVISION` to the latest full SHA of `phishtriage-colab`, then *Run all*.
-   Check that section 0 shows the expected commit with no `(MODIFIED)` flag, that sections 29–30 report
-   `offline_interface_checks_passed: true`, and that the interface in section 28 renders.
-2. **Interface (API-free):** evidence-only and replay on a SYNTHETIC example; edit the input to see the stale
-   warning; Export JSON (summary).
-3. **Live (optional):** with the `GEMINI_API_KEY` secret, run section 21 with `RUN_LLM_PREFLIGHT = True`, then
-   section 26 with `RUN_LIVE_AGENT = True` (one case) or the interface in Live mode.
-4. **Send back:** *File → Download .ipynb* into `colab_import/`, or paste the outputs of sections 0, 21, 26, 29
-   and 30.
-5. **Before any commit:** reset the flags to False. Outputs are sanitized and kept out of the canonical notebook.
+## Next action (owner)
+1. Download the executed notebook from your successful Colab run (*File → Download → Download .ipynb*) into
+   `colab_import/`, plus `/content/phishtriage/outputs/final_verification.json` and `phase5_verification.json`
+   if the runtime is still alive. These close the open rows in `docs/VERIFICATION.md`.
+2. If that runtime is gone: follow `docs/DEMO_RUNBOOK.md` steps 1–6 in a fresh runtime pinned to the latest SHA,
+   then download the same files.

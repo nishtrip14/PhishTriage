@@ -2,7 +2,7 @@
 
 Code: `phishtriage/agent.py` (workflow, report contract, validation), `phishtriage/agent_model.py` (Gemini and
 scripted adapters), `phishtriage/agent_replays.py` (synthetic demo emails and scripted turns).
-Notebook: sections 23–27. Entry point:
+Notebook: sections 23–27 (agents) and 28–30 (interface, checks, final summary). Entry point:
 
 ```python
 from phishtriage import agent as A
@@ -11,13 +11,8 @@ print(A.format_report(result.report)); result.trace   # observable actions only
 ```
 
 ## Verification status
-| Aspect | Status |
-|---|---|
-| Implementation | Done (`1811f87`, `ae1d38b`, `30a2378`); quota and batch fixes in `e635833` |
-| Offline tests | `pytest tests`: **89 passed** (agent and quota tests use a scripted adapter or a fake Gemini client; network blocked) |
-| Local notebook execution | Sections 0–27 ran end to end at `e635833` (clean tree); phase 1–3 outputs reproduced exactly |
-| Genuine Colab execution | **Yes, offline paths:** sections 0–27 ran in Colab at `9acefcb` (outputs saved in `f2b7277`). Replay and evidence-only results matched the local run; the live sections were skipped |
-| Live provider (Gemini) | **User-reported historical results only** (preflight `ok` with `gemini-3.6-flash`, SDK 2.12.1; four live cases, see `COLAB_STATUS.md`). Revision not recorded; not in any recovered notebook. `e635833`+ not run live |
+The current verification matrix is maintained in [VERIFICATION.md](VERIFICATION.md), including test counts, the
+local and Colab notebook runs, widget status and user-reported live results. This document describes behaviour.
 
 ## State transitions
 ```
@@ -186,11 +181,11 @@ not an independent guarantee.
 | Budget or deadline exhausted | `needs_human_review` (a partial result) with the reason; nothing is invented |
 | Unknown case | `failed`, `invalid_input`. Empty input is rejected earlier by `email_input`, and oversized input is truncated with a note |
 
-## Synthetic demonstrations (replay, local run at `30a2378`)
+## Synthetic demonstrations (replay; current scripts, local run at `f6642c9`)
 | Case | Assessment | Classifier | Playbooks | Requests |
 |---|---|---|---|---|
 | Credential request with link mismatch | suspicious, after one reviewer correction | phishing | PB-01, PB-04 | 6 |
-| Benign notification | no_strong_indicators **(with a disagreement warning)** | **phishing** | PB-06 | 5 |
+| Benign notification | no_strong_indicators **(with a disagreement warning)** | **phishing** | PB-07 (PB-06 until `1955903`) | 5 |
 | Ambiguous message | insufficient_evidence | legitimate | PB-07 | 4 |
 | Prompt-injection attempt | suspicious; the injection is cited as evidence | phishing | PB-02 | 4 |
 
