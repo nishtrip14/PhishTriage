@@ -15,16 +15,17 @@ below follow the owner's prompts.
 | 2 | Classifier training & evaluation | **Done; run locally and in Colab.** Thresholds and a few error counts differed between the two environments; the cause is not established (see `docs/MODEL_EVALUATION.md`) | `docs/MODEL_EVALUATION.md`, `reports/phase2_metrics.json`, code `e19b8cc` |
 | 3 | Local evidence tools & playbook retrieval (RAG over a small, cited playbook corpus) | **Done; verified locally and in Colab (`9acefcb`).** Live preflight: user-reported `ok` (see below); revision not recorded. | `docs/TOOLS_AND_EVIDENCE.md`, `reports/retrieval_check.json`, `reports/phase3_summary.json`, code `86993a3` |
 | 4 | Bounded investigator and reviewer agents (tool budget, step limit, cited findings) | **Implemented and offline-tested; replay and evidence-only verified in Colab (`9acefcb`).** User-reported live results exist (see below; revision not recorded). The quota/batch fixes (`e635833`) have not run in Colab. | `docs/AGENT_WORKFLOW.md`, `reports/phase4_summary.json`, `reports/colab_run_9acefcb.json`, code `e635833` |
-| 5 | Notebook interface, report export & agent evaluation | Not started | |
-| 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | Not started | |
+| 5 | Reliability, evidence grounding, model configuration, interface & export | **Implemented and offline-tested (`1955903`); local notebook run.** Colab widget rendering and live use of this code not yet verified | `docs/DEMO_RUNBOOK.md`, `docs/AGENT_WORKFLOW.md`, `reports/phase5_verification.json`, `reports/final_verification.json` |
+| 6 | Fresh-runtime verification & final submission (`reports/PhishTriage_Colab_Executed.ipynb`) | **Next.** Owner run in a fresh Colab runtime (see Next action) | |
 
-## Verification matrix (as of 2026-10-16)
+## Verification matrix (as of 2026-10-16, phase 5)
 | Stage | Implementation | Offline tests | Local notebook run | Genuine Colab run | Live provider |
 |---|---|---|---|---|---|
 | 1 Data | done | yes | yes | **yes** (`9acefcb`; identical split) | n/a |
 | 2 Classifier | done | yes | yes (reproduced exactly) | **yes** (thresholds and a few error counts differ from the local run; cause not established) | n/a |
 | 3 Evidence, retrieval, tools | done | yes | yes | **yes** (results identical) | preflight **user-reported `ok`** (`gemini-3.6-flash`, SDK 2.12.1); not in any recovered notebook |
-| 4 Agents | done (+ quota/batch fixes `e635833`) | yes (89 tests total) | yes, at `e635833` | **yes, offline paths only** (replay and evidence-only at `9acefcb`) | **user-reported historical results** (below); code revision not recorded; `e635833`+ not run live |
+| 4 Agents | done (+ quota/batch fixes `e635833`) | yes | yes, at `e635833` and `1955903` | **yes, offline paths only** (replay and evidence-only at `9acefcb`) | **user-reported historical results** (below); code revision not recorded; `e635833`+ not run live |
+| 5 Reliability, grounding, config, interface, export | done (`1955903`) | yes: 115 passed (google-genai 2.31.0); 114 passed + 1 skipped (2.12.1, no ipywidgets there) | yes, sections 0–30 at `1955903` (clean); frozen evaluation reproduced | **not yet** (widgets need a person to view them in Colab) | **not yet** |
 
 - **Local:** this Mac (Python 3.13.7, pandas 3.0.6, scikit-learn 1.9.1).
 - **Colab:** Python 3.13.16, pandas 2.2.3, scikit-learn 1.6.1, 2 CPUs. The outputs were saved in commit
@@ -46,9 +47,10 @@ below follow the owner's prompts.
 | `9acefcb` | Sections 0–27, offline paths (live sections skipped) | Google Colab | saved outputs in `f2b7277`; extract `reports/colab_run_9acefcb.json` |
 | *not recorded* | Section 21 preflight and section 26 live agent | Google Colab | **user-reported** only (below); no executed notebook recovered |
 | `e635833` | Quota/batch fixes; 89 offline tests; notebook sections 0–27 (live skipped) | local Mac | test output in this session; `reports/phase4_summary.json` |
-| `9283ce1` | Documentation and evidence only (no code change from `e635833`) | n/a | branch HEAD at the time of writing |
+| `9283ce1`, `17826ac` | Documentation and evidence only (no code change from `e635833`) | n/a | |
+| `1955903` | Phase 5 code; 115 offline tests; notebook sections 0–30 (live flags off) | local Mac | `reports/phase5_verification.json`, `reports/final_verification.json` |
 
-**Updated code (`e635833` and later) still needs a fresh Colab run**, offline and live.
+**Updated code (`e635833` and later, including `1955903`) still needs a fresh Colab run**, offline and live.
 
 ## User-reported historical live results (Colab)
 These were reported by the owner. They are **not** contained in the recovered notebook. The code revision,
@@ -157,8 +159,12 @@ timestamps and executed notebook were not recorded, and none is inferred here.
 ## Blockers and open risks
 - **Live path:** only user-reported historical results exist (above), at an unrecorded revision. The `e635833`
   fixes have not run in Colab.
-- **Open defects:** absence claims are not grounded against `unavailable` evidence; server-error retry handling
-  and model configuration consistency need tightening. These are scheduled for the next implementation phase.
+- **Addressed in `1955903` (offline-tested, not yet verified live):**
+  - Absence claims are now checked against evidence status (`observed_absent` vs `unavailable`).
+  - Server errors use bounded jittered backoff.
+  - Request and time capacity is reserved for finalize and review.
+  - The model configuration has one source, with approval bound to the model and SDK.
+  - The deterministic absence check covers common phrasings only.
 - **Confounded data:** source = label in every split; no external validation set (searched once on 2026-10-15,
   recorded as pending); residual cues `utf`/`url`/topics; a ~15-year date gap.
 - **Fresh live verification of the current code** is still useful, but it is not a prerequisite for offline
@@ -166,18 +172,25 @@ timestamps and executed notebook were not recorded, and none is inferred here.
 - **Colab uses pandas 2.x and possibly a different scikit-learn minor version.** Models are retrained in the
   runtime, so artifacts are never moved across versions.
 
-## Checkpoint for the next phase
-- **Branch:** `phishtriage-colab` at the reconciliation commits (see `git log`); `main` untouched at `170260b`.
-- **Canonical notebook:** 64 cells, sections 0–27, outputs cleared, `RUN_LLM_PREFLIGHT = False`,
-  `RUN_LIVE_AGENT = False`.
-- **Tests:** 89 offline tests pass.
-- **Frozen phase 2 configurations and reports unchanged.**
+## Checkpoint (2026-10-16, after phase 5)
+- **Branch:** `phishtriage-colab`. The phase 5 code is `1955903`; the evidence and docs commit follows it (see
+  `git log`). `main` is untouched at `170260b`.
+- **Notebook:** 70 cells, sections 0–30, outputs cleared, `RUN_LLM_PREFLIGHT`, `RUN_LIVE_AGENT` and
+  `RUN_ALL_LIVE_CASES` all `False`. *Run all* never calls the API or waits for input.
+- **Configured live model:** `gemini-3.6-flash` (section 21 `MODEL_OVERRIDE` to change it; a new preflight is
+  then required).
+- **Tests:** 115 offline tests pass (google-genai 2.31.0); 114 pass + 1 skipped on google-genai 2.12.1.
+- **Unchanged:** the frozen phase 2 configurations, thresholds and reports, and the split manifest. Re-runs
+  reproduce them exactly.
 
-## Next action
-1. Owner (about 10 minutes):
-   1. In a **fresh** runtime, set `PHISHTRIAGE_REVISION` to the latest full SHA and run sections 0–27.
-   2. Add the `GEMINI_API_KEY` secret, set `RUN_LLM_PREFLIGHT = True` and run section 21.
-   3. If the status is `ok`, set `RUN_LIVE_AGENT = True` with `LIVE_CASES = ["credential_link"]` and run sections 26–27.
-   4. Save the notebook to `colab_import/` or GitHub. Reset both flags to False before any commit.
-2. Stage 5: notebook interface (ipywidgets), report export and agent evaluation, built on `run_triage` /
-   `run_batch_triage`.
+## Next action (owner, in Colab, about 15 minutes)
+1. **Fresh CPU runtime:** set `PHISHTRIAGE_REVISION` to the latest full SHA of `phishtriage-colab`, then *Run all*.
+   Check that section 0 shows the expected commit with no `(MODIFIED)` flag, that sections 29–30 report
+   `offline_interface_checks_passed: true`, and that the interface in section 28 renders.
+2. **Interface (API-free):** evidence-only and replay on a SYNTHETIC example; edit the input to see the stale
+   warning; Export JSON (summary).
+3. **Live (optional):** with the `GEMINI_API_KEY` secret, run section 21 with `RUN_LLM_PREFLIGHT = True`, then
+   section 26 with `RUN_LIVE_AGENT = True` (one case) or the interface in Live mode.
+4. **Send back:** *File → Download .ipynb* into `colab_import/`, or paste the outputs of sections 0, 21, 26, 29
+   and 30.
+5. **Before any commit:** reset the flags to False. Outputs are sanitized and kept out of the canonical notebook.

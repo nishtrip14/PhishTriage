@@ -44,8 +44,8 @@ python -m pytest -q -p no:cacheprovider tests
 PHISHTRIAGE_EXPORT_DIR="$PWD/reports" jupyter nbconvert --to notebook --execute \
   --ExecutePreprocessor.timeout=1800 --output-dir "$HOME/.cache/phishtriage-exec" notebooks/PhishTriage_Colab.ipynb
 ```
-Both were verified on 2026-10-15 in a venv (pandas 3.0.6, scikit-learn 1.9.1), with scratch directories for the
-workdir and output. If you execute a *copy* of the notebook from outside the repo, set `PHISHTRIAGE_REPO`. Write the executed copy outside the repository and keep the canonical notebook cleared.
+Both were verified on 2026-10-16 in a venv (pandas 3.0.6, scikit-learn 1.9.1, google-genai 2.31.0, ipywidgets 8),
+with scratch directories for the workdir and output. If you execute a *copy* of the notebook from outside the repo, set `PHISHTRIAGE_REPO`. Write the executed copy outside the repository and keep the canonical notebook cleared.
 Mark a new command as verified only after running it.
 
 ## Data rules
@@ -81,6 +81,12 @@ Mark a new command as verified only after running it.
 - Keep the budgets (3 rounds, 5 tools, 6 requests, 90 s) unless the owner asks to change them. SDK retries stay
   off, and quota (429) is never retried. Run multiple live cases through `run_batch_triage`, which stops on quota.
 - Add phase cells to the notebook by appending or editing in place; preserve existing cell IDs.
+- Live model: one setting (`LLMSettings`, section 21). Never switch models silently. Approval is bound to
+  (model, installed SDK) through `PreflightRegistry`.
+- Evidence statuses: `observed_absent` (checked, not found within a scope) is not `unavailable` (unknown).
+  Never let a report claim absence from unavailable evidence.
+- Interface and export: escape everything; summary exports carry no email text; the detailed export is opt-in.
+  Submitted cases stay in session memory and are never committed.
 
 ## Status tracking
 Update `COLAB_STATUS.md` after each phase, with evidence (a commit hash, a Colab run date, metrics).

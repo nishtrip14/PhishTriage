@@ -1,9 +1,9 @@
 {
   "environment": "local",
-  "code_commit": "86993a39bf53ebe0863aeb823bff2010c23a2423",
+  "code_commit": "19559032b9b8495544460ffe06f7d3f3f9f3a898",
   "code_modified": false,
   "requested_revision": "local working tree",
-  "run_at_utc": "2026-10-15T13:56:54Z",
+  "run_at_utc": "2026-10-16T09:59:17Z",
   "versions": {
     "python": "3.13.7",
     "scikit-learn": "1.9.1",
@@ -11,7 +11,7 @@
     "scipy": "1.18.1",
     "pandas": "3.0.6",
     "joblib": "1.6.0",
-    "phishtriage": "0.3.0"
+    "phishtriage": "0.5.0"
   },
   "tools": [
     "get_prediction",
@@ -23,12 +23,13 @@
   "demo_cases_synthetic": true,
   "evidence_status_counts": {
     "case-demo-eml": {
-      "observed": 13,
+      "observed": 14,
       "unverified_claim": 1
     },
     "case-demo-pasted": {
       "observed": 5,
-      "unavailable": 4
+      "unavailable": 4,
+      "observed_absent": 1
     }
   },
   "failure_checks": {
@@ -73,7 +74,7 @@
   },
   "llm_preflight": {
     "status": "skipped_opt_in_required",
-    "model": "gemini-3.8-flash",
+    "model": "gemini-3.6-flash",
     "sdk_version": null,
     "network_calls": 0
   }

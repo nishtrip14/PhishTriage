@@ -1,9 +1,9 @@
 {
   "environment": "local",
-  "code_commit": "e63583377831ca20e1a8430eb1f727e01b980a5a",
+  "code_commit": "19559032b9b8495544460ffe06f7d3f3f9f3a898",
   "code_modified": false,
   "requested_revision": "local working tree",
-  "run_at_utc": "2026-10-16T09:32:15Z",
+  "run_at_utc": "2026-10-16T09:59:17Z",
   "agent_version": "1.0",
   "budgets": {
     "max_tool_rounds": 3,
@@ -15,7 +15,11 @@
     "max_output_tokens_tools": 1024,
     "max_output_tokens_report": 2048,
     "max_rejected_calls": 4,
-    "max_provider_retries": 1,
+    "max_provider_retries": 2,
+    "backoff_base_s": 2.0,
+    "backoff_max_s": 8.0,
+    "max_retry_wait_s": 20.0,
+    "finish_reserve_s": 20.0,
     "max_revisions": 1,
     "email_prompt_chars": 6000
   },
@@ -45,7 +49,7 @@
       "assessment": "no_strong_indicators",
       "classifier": "phishing",
       "playbooks": [
-        "PB-06"
+        "PB-07"
       ],
       "review_rounds": 1,
       "model_requests": 5,
@@ -150,9 +154,9 @@
   ],
   "live": {
     "status": "skipped: RUN_LIVE_AGENT is False",
+    "configured_model": "gemini-3.6-flash",
+    "installed_sdk": "2.31.0",
     "preflight_status": "skipped_opt_in_required",
-    "model": null,
-    "runs": [],
-    "batch": null
+    "attempts": []
   }
 }
