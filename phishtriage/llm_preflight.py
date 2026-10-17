@@ -11,11 +11,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-# Explicit project default. gemini-3.6-flash is the model of the last user-reported successful preflight and
-# complete live case (google-genai 2.12.1); it is listed as stable on ai.google.dev/gemini-api/docs/models
-# (checked 2026-10-16). gemini-3.8-flash (also listed stable) previously returned a high-demand server error.
-# Availability for a given account is never assumed: the preflight checks it in each runtime.
-DEFAULT_MODEL = "gemini-3.6-flash"
+# Explicit project default: a PROVISIONAL demonstration choice from a small bounded comparison on 2026-10-17
+# (docs/MODEL_SELECTION.md). gemini-3.8-flash, gemini-3.6-flash and gemini-3.5-flash-lite all passed preflight and
+# completed the credential_link case; 3.6 and 3.8 produced comparable reports, and 3.6 showed more HTTP 503s over
+# the two days observed. Availability for a given account is never assumed: the preflight checks it per runtime.
+DEFAULT_MODEL = "gemini-3.8-flash"
 MODEL_ENV = "PHISHTRIAGE_GEMINI_MODEL"
 _MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9.\-]{2,63}$")
 KEY_NAME = "GEMINI_API_KEY"

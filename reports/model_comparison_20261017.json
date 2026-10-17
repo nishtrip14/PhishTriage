@@ -1,0 +1,708 @@
+{
+  "description": "Bounded live comparison of Gemini models on SYNTHETIC cases (sanitized). See docs/MODEL_SELECTION.md.",
+  "environment": "local Mac, Python 3.13.7, google-genai 2.31.0; key from the git-ignored .env via load_local_env",
+  "billing_status": "unknown (not inspected or changed); the daily-quota error text refers to plan and billing details",
+  "model_listing": {
+    "call": "client.models.list(page_size=1000)",
+    "models_returned": 63,
+    "note": "one list call (page count not instrumented); not a generation request"
+  },
+  "aborted_first_run": {
+    "code_commit": "c49d8446ebefe56fde3ab3ec7f1b83bfef533e1c",
+    "outcome": "harness defect: wrapped SDK client was garbage-collected; all 3 model lookups failed locally ('client has been closed') before sending; 0 generation requests; fixed in 7849593"
+  },
+  "frozen_plan": {
+    "plan": {
+      "candidates": [
+        "gemini-3.6-flash",
+        "gemini-3.8-flash",
+        "gemini-3.5-flash-lite"
+      ],
+      "cases": [
+        "credential_link",
+        "benign_notification"
+      ],
+      "max_generation": 39,
+      "max_seconds": 900.0,
+      "pause_between_cases_s": 5.0,
+      "frozen_at_utc": "2026-10-17T06:00:41Z"
+    },
+    "code_commit": "7849593d3597def56c168404ec8ba5ff5dbae3ad",
+    "sdk_version": "2.31.0",
+    "agent_config": {
+      "max_tool_rounds": 3,
+      "max_tool_executions": 5,
+      "max_model_requests": 6,
+      "deadline_s": 90.0,
+      "request_timeout_s": 30.0,
+      "min_request_window_s": 2.0,
+      "max_output_tokens_tools": 1024,
+      "max_output_tokens_report": 2048,
+      "max_rejected_calls": 4,
+      "max_provider_retries": 2,
+      "backoff_base_s": 2.0,
+      "backoff_max_s": 8.0,
+      "max_retry_wait_s": null,
+      "finish_reserve_s": 20.0,
+      "max_revisions": 1,
+      "email_prompt_chars": 6000
+    },
+    "agent_version": "1.0",
+    "classifier_model": "tfidf_logreg__artifact_normalized",
+    "playbook_index": "example_playbooks.json (PB-01..PB-08)"
+  },
+  "code_commit": "7849593d3597def56c168404ec8ba5ff5dbae3ad",
+  "preflights": {
+    "gemini-3.6-flash": {
+      "status": "ok",
+      "model": "gemini-3.6-flash",
+      "sdk_version": "2.31.0",
+      "checks": [
+        {
+          "step": "model_lookup",
+          "ok": true,
+          "supported_actions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "step": "function_call",
+          "ok": true,
+          "returned_calls": [
+            "record_check"
+          ]
+        }
+      ],
+      "network_calls": 2,
+      "error": null
+    },
+    "gemini-3.8-flash": {
+      "status": "ok",
+      "model": "gemini-3.8-flash",
+      "sdk_version": "2.31.0",
+      "checks": [
+        {
+          "step": "model_lookup",
+          "ok": true,
+          "supported_actions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "step": "function_call",
+          "ok": true,
+          "returned_calls": [
+            "record_check"
+          ]
+        }
+      ],
+      "network_calls": 2,
+      "error": null
+    },
+    "gemini-3.5-flash-lite": {
+      "status": "ok",
+      "model": "gemini-3.5-flash-lite",
+      "sdk_version": "2.31.0",
+      "checks": [
+        {
+          "step": "model_lookup",
+          "ok": true,
+          "supported_actions": [
+            "generateContent",
+            "countTokens",
+            "createCachedContent",
+            "batchGenerateContent"
+          ]
+        },
+        {
+          "step": "function_call",
+          "ok": true,
+          "returned_calls": [
+            "record_check"
+          ]
+        }
+      ],
+      "network_calls": 2,
+      "error": null
+    }
+  },
+  "attempts": [
+    {
+      "attempt_id": "cmp-01",
+      "started_at_utc": "2026-10-17T06:00:51Z",
+      "model": "gemini-3.6-flash",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "credential_link",
+      "status": "approved",
+      "termination_reason": "approved",
+      "termination_detail": "",
+      "requests": {
+        "model_requests": 5,
+        "ok": 4,
+        "errors": [
+          503
+        ],
+        "retries": 1,
+        "retry_wait_s": 1.05,
+        "abnormal_finish": []
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "get_prediction",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 3,
+        "rejected": 0,
+        "rounds": 1
+      },
+      "finalize_completed": true,
+      "review_completed": true,
+      "reviewer_status": "approved",
+      "review_rounds": 1,
+      "validation_issues": [],
+      "unresolved_objections": [],
+      "tokens": {
+        "prompt_tokens": 11019,
+        "output_tokens": 565,
+        "thought_tokens": 2232
+      },
+      "elapsed_s": 30.18,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.9996694384666585,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": "suspicious",
+      "report": {
+        "findings": [
+          {
+            "statement": "Sender domain (example.com) and Reply-To domain (example.net) mismatch.",
+            "evidence_ids": [
+              "cmp-01-credential_link/ev-003",
+              "cmp-01-credential_link/ev-004",
+              "cmp-01-credential_link/ev-005"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The embedded link targets a plain HTTP IP address while displaying accounts.example.com as visible link text.",
+            "evidence_ids": [
+              "cmp-01-credential_link/ev-008",
+              "cmp-01-credential_link/ev-009"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The message uses urgent account suspension threats to request password verification.",
+            "evidence_ids": [
+              "cmp-01-credential_link/ev-001",
+              "cmp-01-credential_link/ev-002",
+              "cmp-01-credential_link/ev-010",
+              "cmp-01-credential_link/ev-011",
+              "cmp-01-credential_link/ev-012"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "Authentication-Results header was observed absent in the supplied message headers.",
+            "evidence_ids": [
+              "cmp-01-credential_link/ev-006"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "No attachments were observed in the MIME structure inspected.",
+            "evidence_ids": [
+              "cmp-01-credential_link/ev-007"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          }
+        ],
+        "playbook_refs": [
+          {
+            "doc_id": "PB-01",
+            "version": "1.0",
+            "title": "Suspected credential theft",
+            "reason": "Applies to suspected credential theft emails requesting password verification to avoid suspension.",
+            "verified_retrieved": true,
+            "label": "EXAMPLE POLICY guidance"
+          },
+          {
+            "doc_id": "PB-08",
+            "version": "1.0",
+            "title": "Human escalation and verification",
+            "reason": "Guidance on human escalation, sender verification, and containment steps.",
+            "verified_retrieved": true,
+            "label": "EXAMPLE POLICY guidance"
+          }
+        ],
+        "missing_information": [
+          {
+            "item": "Email authentication headers (SPF, DKIM, DMARC) were not provided in the email headers.",
+            "evidence_id": null,
+            "source": "agent"
+          },
+          {
+            "item": "Whether any user clicked the suspicious link or entered credentials on the target site.",
+            "evidence_id": null,
+            "source": "agent"
+          }
+        ],
+        "recommended_actions": [
+          {
+            "action": "Block access to the target IP address and URL at the network boundary.",
+            "playbook_refs": [
+              "PB-01"
+            ]
+          },
+          {
+            "action": "Check proxy/DNS logs for user interaction with the target IP address and enforce password resets if credentials were submitted.",
+            "playbook_refs": [
+              "PB-01",
+              "PB-08"
+            ]
+          },
+          {
+            "action": "Verify request legitimacy with the legitimate service team via known out-of-band contact channels.",
+            "playbook_refs": [
+              "PB-08"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attempt_id": "cmp-02",
+      "started_at_utc": "2026-10-17T06:01:26Z",
+      "model": "gemini-3.8-flash",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "credential_link",
+      "status": "approved",
+      "termination_reason": "approved",
+      "termination_detail": "",
+      "requests": {
+        "model_requests": 5,
+        "ok": 4,
+        "errors": [
+          null
+        ],
+        "retries": 1,
+        "retry_wait_s": 1.87,
+        "abnormal_finish": []
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "get_prediction",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 3,
+        "rejected": 0,
+        "rounds": 1
+      },
+      "finalize_completed": true,
+      "review_completed": true,
+      "reviewer_status": "approved",
+      "review_rounds": 1,
+      "validation_issues": [],
+      "unresolved_objections": [],
+      "tokens": {
+        "prompt_tokens": 11228,
+        "output_tokens": 608,
+        "thought_tokens": 2496
+      },
+      "elapsed_s": 61.24,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.9996694384666585,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": "suspicious",
+      "report": {
+        "findings": [
+          {
+            "statement": "The email contains a deceptive link where the displayed text 'https://accounts.example.com/verify' masks an underlying target URL pointing to an insecure plain HTTP IP literal address 'http://198.51.100.23/login'.",
+            "evidence_ids": [
+              "cmp-02-credential_link/ev-008",
+              "cmp-02-credential_link/ev-009"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "A mismatch exists between the From header domain ('example.com') and the Reply-To header domain ('example.net').",
+            "evidence_ids": [
+              "cmp-02-credential_link/ev-003",
+              "cmp-02-credential_link/ev-004",
+              "cmp-02-credential_link/ev-005"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The email subject and body use urgency language threatening mailbox suspension within 24 hours to coerce credential verification.",
+            "evidence_ids": [
+              "cmp-02-credential_link/ev-001",
+              "cmp-02-credential_link/ev-002",
+              "cmp-02-credential_link/ev-010",
+              "cmp-02-credential_link/ev-011"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "No attachments were found among the inspected MIME parts in the supplied .eml file.",
+            "evidence_ids": [
+              "cmp-02-credential_link/ev-007"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The static text classifier produced a predicted label of phishing, though this is an uncalibrated model estimate evaluated only on subject and body text.",
+            "evidence_ids": [
+              "cmp-02-credential_link/ev-013"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          }
+        ],
+        "playbook_refs": [
+          {
+            "doc_id": "PB-01",
+            "version": "1.0",
+            "title": "Suspected credential theft",
+            "reason": "Playbook addresses suspected credential theft messages prompting account verification under threat of suspension.",
+            "verified_retrieved": true,
+            "label": "EXAMPLE POLICY guidance"
+          }
+        ],
+        "missing_information": [
+          {
+            "item": "Authentication-Results header was not found in the supplied headers, so SPF, DKIM, and DMARC status remains unknown.",
+            "evidence_id": null,
+            "source": "agent"
+          },
+          {
+            "item": "Telemetry indicating whether the recipient visited the link or entered credentials is not provided.",
+            "evidence_id": null,
+            "source": "agent"
+          }
+        ],
+        "recommended_actions": [
+          {
+            "action": "Block traffic to the IP address 198.51.100.23 across perimeter firewalls and secure web gateways.",
+            "playbook_refs": [
+              "PB-01"
+            ]
+          },
+          {
+            "action": "Determine whether recipient visited the URL or submitted credentials, and reset credentials immediately if exposure occurred.",
+            "playbook_refs": [
+              "PB-01"
+            ]
+          },
+          {
+            "action": "Remove the phishing email from recipient mailboxes and search mail logs for other instances.",
+            "playbook_refs": [
+              "PB-01"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "attempt_id": "cmp-03",
+      "started_at_utc": "2026-10-17T06:02:32Z",
+      "model": "gemini-3.5-flash-lite",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "credential_link",
+      "status": "approved",
+      "termination_reason": "approved",
+      "termination_detail": "",
+      "requests": {
+        "model_requests": 4,
+        "ok": 4,
+        "errors": [],
+        "retries": 0,
+        "retry_wait_s": 0.0,
+        "abnormal_finish": []
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 1,
+        "rejected": 0,
+        "rounds": 1
+      },
+      "finalize_completed": true,
+      "review_completed": true,
+      "reviewer_status": "approved",
+      "review_rounds": 1,
+      "validation_issues": [],
+      "unresolved_objections": [],
+      "tokens": {
+        "prompt_tokens": 8509,
+        "output_tokens": 392,
+        "thought_tokens": 0
+      },
+      "elapsed_s": 6.06,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.9996694384666585,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": "suspicious",
+      "report": {
+        "findings": [
+          {
+            "statement": "The email exhibits credential-harvesting language and urgency phrases.",
+            "evidence_ids": [
+              "cmp-03-credential_link/ev-001",
+              "cmp-03-credential_link/ev-002",
+              "cmp-03-credential_link/ev-010",
+              "cmp-03-credential_link/ev-011"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The email contains a mismatch between the visible target domain and the actual target host pointing to an IP address.",
+            "evidence_ids": [
+              "cmp-03-credential_link/ev-008",
+              "cmp-03-credential_link/ev-009"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "There is a mismatch between the sender domain and the Reply-To domain.",
+            "evidence_ids": [
+              "cmp-03-credential_link/ev-003",
+              "cmp-03-credential_link/ev-004",
+              "cmp-03-credential_link/ev-005"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          }
+        ],
+        "playbook_refs": [],
+        "missing_information": [],
+        "recommended_actions": [
+          {
+            "action": "Block the malicious IP address and URL associated with the credential harvesting link.",
+            "playbook_refs": []
+          }
+        ]
+      }
+    },
+    {
+      "attempt_id": "cmp-04",
+      "started_at_utc": "2026-10-17T06:02:43Z",
+      "model": "gemini-3.6-flash",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "benign_notification",
+      "status": "failed",
+      "termination_reason": "provider_quota",
+      "termination_detail": "HTTP 429 RESOURCE_EXHAUSTED (quota: daily) retry-after 64617s: You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.goog",
+      "requests": {
+        "model_requests": 5,
+        "ok": 3,
+        "errors": [
+          503,
+          429
+        ],
+        "retries": 1,
+        "retry_wait_s": 1.26,
+        "abnormal_finish": [
+          "text; finish MAX_TOKENS"
+        ]
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "get_prediction",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 3,
+        "rejected": 0,
+        "rounds": 1
+      },
+      "finalize_completed": true,
+      "review_completed": false,
+      "reviewer_status": "revision_requested",
+      "review_rounds": 0,
+      "validation_issues": [
+        {
+          "code": "invalid_model_output",
+          "severity": "error"
+        }
+      ],
+      "unresolved_objections": [
+        "other"
+      ],
+      "tokens": {
+        "prompt_tokens": 7216,
+        "output_tokens": 557,
+        "thought_tokens": 1738
+      },
+      "elapsed_s": 18.35,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.898468231327289,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": null,
+      "report": {
+        "findings": [],
+        "playbook_refs": [],
+        "missing_information": [
+          {
+            "item": "sender_address: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-04-benign_notification/ev-003",
+            "source": "evidence_status"
+          },
+          {
+            "item": "reply_to: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-04-benign_notification/ev-004",
+            "source": "evidence_status"
+          },
+          {
+            "item": "authentication_results: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-04-benign_notification/ev-005",
+            "source": "evidence_status"
+          },
+          {
+            "item": "attachments: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-04-benign_notification/ev-006",
+            "source": "evidence_status"
+          }
+        ],
+        "recommended_actions": []
+      }
+    }
+  ],
+  "skipped": [
+    {
+      "model": "gemini-3.8-flash",
+      "what": "benign_notification",
+      "attempt_id": "cmp-05",
+      "reason": "provider_quota on gemini-3.6-flash (cmp-04): comparison stopped (no model rotation)"
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "what": "benign_notification",
+      "attempt_id": "cmp-06",
+      "reason": "provider_quota on gemini-3.6-flash (cmp-04): comparison stopped (no model rotation)"
+    }
+  ],
+  "stopped": "provider_quota on gemini-3.6-flash (cmp-04): comparison stopped (no model rotation)",
+  "ledger": {
+    "generation_requests": 22,
+    "metadata_requests": 3,
+    "refused_by_ledger": 0,
+    "max_generation": 39,
+    "elapsed_s": 144.8
+  },
+  "engineering_review": {
+    "reviewer": "coding assistant (Claude), engineering review against the extracted evidence and playbook text; NOT an independent human evaluation",
+    "per_attempt": {
+      "cmp-01": {
+        "findings": "5/5 cite matching evidence (Reply-To mismatch ev-003..005; IP-literal link ev-008/009; credential and urgency cues; Authentication-Results observed_absent ev-006; attachments observed_absent within the scoped .eml MIME parts ev-007)",
+        "unsupported_or_overstated": [
+          "action 'block the target IP/URL at the network boundary' cites PB-01, which does not contain that step",
+          "action 'check proxy/DNS logs' is only partly supported (PB-01/PB-08 support password change if credentials were entered)"
+        ],
+        "invented_auth_or_tools_or_ids": false,
+        "classifier_unchanged": true,
+        "verdict": "acceptable findings; guidance attribution partly unsupported"
+      },
+      "cmp-02": {
+        "findings": "5/5 cite matching evidence; the classifier finding (ev-013) restates the trusted label with the uncalibrated caveat",
+        "unsupported_or_overstated": [
+          "action 'block traffic to 198.51.100.23 at perimeter firewalls' cites PB-01, which does not contain that step",
+          "action 'remove the phishing email from mailboxes' cites PB-01 (not in PB-01) and calls the message 'phishing' while the assessment is 'suspicious'"
+        ],
+        "invented_auth_or_tools_or_ids": false,
+        "classifier_unchanged": true,
+        "verdict": "acceptable findings; guidance attribution partly unsupported, one overstated phrase"
+      },
+      "cmp-03": {
+        "findings": "3/3 cite matching evidence (credential/urgency cues, link-target mismatch, Reply-To mismatch)",
+        "unsupported_or_overstated": [
+          "only inspect_email was called; no playbook was retrieved, so the report has no playbook support at all",
+          "the single action ('block the malicious IP address') has no playbook reference and calls the host 'malicious'",
+          "no missing information listed (Authentication-Results absence not carried into missing information)"
+        ],
+        "invented_auth_or_tools_or_ids": false,
+        "classifier_unchanged": true,
+        "verdict": "findings grounded, but thin investigation and unsupported guidance"
+      },
+      "cmp-04": {
+        "findings": "none: the finalize output was truncated (finish MAX_TOKENS) and rejected as invalid; the revision request hit a daily quota 429",
+        "unsupported_or_overstated": [],
+        "invented_auth_or_tools_or_ids": false,
+        "classifier_unchanged": true,
+        "verdict": "no report to assess; the failure was reported, not hidden"
+      }
+    }
+  },
+  "notes": [
+    "Error entries record HTTP status only in this run; cmp-02's single error had no HTTP status (a non-HTTP transport error; category not recorded). Later code records the category.",
+    "Preflight token usage is not recorded.",
+    "After this run: output-token caps raised (thinking counts against max_output_tokens) and default set to gemini-3.8-flash; neither change has run live."
+  ]
+}

@@ -12,10 +12,10 @@ from phishtriage import agent as A, agent_replays as AR, export as X, llm_prefli
 
 def test_settings_resolution_is_explicit(monkeypatch):
     monkeypatch.delenv(LP.MODEL_ENV, raising=False)
-    assert LP.LLMSettings.resolve().model == LP.DEFAULT_MODEL == "gemini-3.6-flash"
-    monkeypatch.setenv(LP.MODEL_ENV, "gemini-3.8-flash")
-    assert LP.LLMSettings.resolve().model == "gemini-3.8-flash"
-    assert LP.LLMSettings.resolve("gemini-3.5-flash-lite").model == "gemini-3.5-flash-lite"
+    assert LP.LLMSettings.resolve().model == LP.DEFAULT_MODEL            # precedence: argument > env > default
+    monkeypatch.setenv(LP.MODEL_ENV, "gemini-env-model")
+    assert LP.LLMSettings.resolve().model == "gemini-env-model"
+    assert LP.LLMSettings.resolve("gemini-explicit-model").model == "gemini-explicit-model"
     with pytest.raises(ValueError):
         LP.LLMSettings.resolve("not a model; rm -rf")
 

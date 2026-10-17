@@ -61,8 +61,11 @@ class AgentConfig:
     deadline_s: float = 90.0
     request_timeout_s: float = 30.0
     min_request_window_s: float = 2.0    # do not start a request with less time than this left
-    max_output_tokens_tools: int = 1024
-    max_output_tokens_report: int = 2048
+    # Gemini counts thinking tokens against max_output_tokens (ai.google.dev/gemini-api/docs/thinking). With the
+    # earlier 1024/2048 caps a gemini-3.6-flash finalize request ended with MAX_TOKENS (comparison cmp-04,
+    # 2026-10-17). Only tokens actually generated are billed; the request/tool/time budgets are unchanged.
+    max_output_tokens_tools: int = 4096
+    max_output_tokens_report: int = 8192
     max_rejected_calls: int = 4
     max_provider_retries: int = 2        # per run, shared by all requests; each retry is also a model request
     backoff_base_s: float = 2.0          # jittered exponential backoff for timeout / network / 5xx

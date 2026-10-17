@@ -106,7 +106,8 @@ def attempt_record(name: str, model: str, attempt_id: str, result, started_utc: 
         "status": r.status, "termination_reason": r.termination_reason,
         "termination_detail": r.termination_detail[:200],
         "requests": {"model_requests": u["model_requests"], "ok": sum(t["status"] == "ok" for t in model_steps),
-                     "errors": [e.get("http_status") for e in r.provider.get("errors", [])],
+                     "errors": [{"http_status": e.get("http_status"), "category": e.get("category")}
+                                for e in r.provider.get("errors", [])],
                      "retries": u["provider_retries"], "retry_wait_s": u["retry_wait_s"],
                      "abnormal_finish": [t["code"] for t in model_steps if "finish " in str(t.get("code"))]},
         "tools": {"calls": [{"name": t["name"], "status": t["status"], "code": t.get("code")} for t in tool_steps],
