@@ -77,6 +77,8 @@ Mark a new command as verified only after running it.
 ## Agent rules
 - Agents use only the four read-only tools, with the case bound by application code. No mailbox access, sending,
   deleting, link visits, attachment execution or autonomous remediation.
+- Recommended actions are validated references to playbook next steps (`PB-01.S1` + version), rendered from the
+  playbook text; never free text. Step IDs are positional, so changing a playbook's `next_steps` needs a new version.
 - Classifier fields in reports come from trusted state only. Replay output is never live-agent validation, and
   `no_strong_indicators` is never "safe".
 - Keep the budgets (3 rounds, 5 tools, 6 requests, 90 s) unless the owner asks to change them. SDK retries stay

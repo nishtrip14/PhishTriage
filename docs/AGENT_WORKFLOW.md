@@ -41,7 +41,8 @@ START ─► trusted get_prediction (application)
 | `findings[]` (`statement`, `evidence_ids`, `rejected_citations`, `has_valid_citation`) | model statements; invalid citations are removed and listed |
 | `playbook_refs[]` (`doc_id`, `version`, `title`, `reason`, `verified_retrieved`, label EXAMPLE POLICY) | model, checked against what `retrieve_playbook` returned |
 | `missing_information[]` | `unavailable`/`error` evidence (trusted) plus model-listed gaps (marked `agent`) |
-| `recommended_actions[]` | model, for a human; actions may only reference cited playbooks |
+| `recommended_actions[]` (`doc_id`, `version`, `action_id`, `action`, `rationale`) | the model picks a reference; the application validates it and fills `action` with the playbook's own text. `rationale` is model text, shown separately, and withheld if it fails validation |
+| `action_note` | trusted: set when no validated action remains ("No validated playbook action applies…") |
 | `review` (`reviewer_status`, `rounds`, `unresolved_objections`, `validation_issues`) | reviewer output plus deterministic checks |
 | `limitations` | fixed list (classifier confound, not proof of safety, example policy, prompt-injection caveat, reviewer is not a guarantee) |
 
@@ -49,8 +50,11 @@ START ─► trusted get_prediction (application)
 **Deterministic checks** (`validate_draft`) produce errors that block approval:
 - Citation problems: `unknown_citation`, `cross_case_citation`, `citation_not_retrieved` (the ID exists but no
   tool returned it this run), and `finding_without_citation`.
-- Playbook problems: `unsupported_playbook_citation`, `playbook_version_mismatch`, and
-  `action_cites_uncited_playbook`.
+- Playbook problems: `unsupported_playbook_citation` and `playbook_version_mismatch`.
+- Action references (`validate_actions`): `action_playbook_not_retrieved`, `action_playbook_version_mismatch`,
+  `unknown_action_id`, `action_cites_uncited_playbook`, `duplicate_action`, and two heuristic, English-only
+  rationale checks: `rationale_adds_instruction` (deleting, blocking, quarantining, reporting or forwarding that
+  the step does not say) and `rationale_overclaim` ("malicious", "definitely", "the phishing email", …).
 - Overclaims and contradictions: `safety_overclaim` ("email is safe", "no risk", …) and
   `classifier_value_mismatch` (a statement contradicting the classifier's label or score).
 - Structure: `suspicious_without_findings`, and `invalid_model_output` (JSON or schema violations, including any
@@ -62,6 +66,23 @@ These checks prove that citations are well-formed and belong to this run. **They
 The **reviewer** (a separate model request with no tools) judges support, contradictions, overconfidence,
 consistency with the playbooks, and whether the draft followed instructions from the email. It is a second pass,
 not an independent guarantee.
+
+## Grounded recommended actions (agent version 1.1, `6a137d8`)
+Each playbook's `next_steps` are the only actions a report may recommend. Their IDs are positional within a
+playbook version (`PB-01.S1` is PB-01's first step), so every reference carries the version too. Changing a
+playbook's steps therefore requires a new playbook version.
+1. `retrieve_playbook` returns each hit's `permitted_actions` (`action_id` + text).
+2. The draft schema accepts only `{doc_id, version, action_id, rationale}`. Free-text actions fail the schema.
+3. `validate_actions` checks each reference against the playbooks retrieved in this run and the loaded catalog.
+4. `resolve_actions` renders the playbook's text. Invalid references are dropped from the report and stay listed
+   as validation issues.
+5. Errors go through the existing single revision. If they remain, the report is `needs_human_review`.
+6. If no step applies, the model returns an empty list and the report states that no validated playbook action
+   applies. No citation is invented.
+
+A valid reference proves that the step exists in a retrieved playbook, **not** that the playbook fits the case. The
+reviewer is asked to object (`playbook_mismatch`) when it does not, and a human decides. Nothing is executed.
+Reports produced before version 1.1 (including `reports/model_comparison_20261017.json`) used free-text actions.
 
 ## Budgets (`AgentConfig` defaults)
 | Budget | Value |

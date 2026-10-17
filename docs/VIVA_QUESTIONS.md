@@ -106,8 +106,8 @@ evidence-only reports, the interface and export. Live mode stays blocked until t
   attachments".
 
 **18. What was actually tested?**
-* **Offline:** 137 tests (data integrity, splits, train-only fitting, parsing limits, evidence statuses, retrieval,
-  tools, the agent loop with scripted and fake-Gemini adapters, retries, budgets, quota, configuration, interface
+* **Offline:** 143 tests (data integrity, splits, train-only fitting, parsing limits, evidence statuses, retrieval,
+  tools, grounded playbook actions, the agent loop with scripted and fake-Gemini adapters, retries, budgets, quota, configuration, interface
   logic, export privacy).
 * **Notebook:** full local runs at the current code, and a Colab run at code `9acefcb`.
 * Details: [VERIFICATION.md](VERIFICATION.md).
@@ -116,10 +116,22 @@ evidence-only reports, the interface and export. Live mode stays blocked until t
 * Colab evidence for the **current** code: the owner reports a successful run, but the executed notebook hasn't
   been supplied.
 * Widget interaction confirmed by a person.
-* Live behaviour at scale: a bounded comparison (2026-10-17) completed one `credential_link` case on each of
-  three models; the benign case did not complete (truncation, then daily quota). The newest token caps and the
-  default model `gemini-3.8-flash` have not run live. See [MODEL_SELECTION.md](MODEL_SELECTION.md).
+* Live behaviour at scale: a bounded comparison (2026-10-17, before grounded actions) completed one
+  `credential_link` case on each of three models. At the final code, a two-case smoke test on `gemini-3.8-flash`
+  gave one `needs_human_review` (reviewer objected to a playbook's fit, budget used up) and one HTTP 503 failure.
+  There is no approved live report at the final code. See [MODEL_SELECTION.md](MODEL_SELECTION.md).
 * Any real-world accuracy.
+
+**19a. How do you stop the model from inventing advice such as "block the IP"?**
+* In the bounded comparison, all three models' approved reports contained actions that cited PB-01 for steps
+  PB-01 does not contain.
+* Since agent version 1.1, the model cannot write action text. It picks step IDs (for example `PB-01.S1`) from
+  playbooks it retrieved in the same run. The application checks the playbook, version and step, and shows the
+  playbook's own wording.
+* The model's rationale is shown separately and rejected if it adds steps such as deleting or blocking, or certainty
+  such as "malicious". Invalid references go through the one revision; otherwise the report needs human review.
+* **Limit:** a valid ID proves the step exists, not that the playbook fits the email. In the final smoke test the
+  reviewer objected to exactly that (PB-06 for a non-urgent notice). Nothing is ever executed.
 
 **20. What would be needed before real deployment?**
 * An independent, multi-source labelled evaluation, and probably a model that generalizes across sources.

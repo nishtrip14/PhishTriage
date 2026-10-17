@@ -131,6 +131,19 @@ timestamps and executed notebook were not recorded, and none is inferred here.
 - **Local notebook:** a fresh Python 3.11 kernel ran sections 0–30 with no errors, and section 0 installed ipywidgets.
   Colab rendering is still unverified.
 
+## Grounded actions and final checks (2026-10-17, code `6a137d8`)
+- **Fix:** recommended actions are references (`doc_id`, `version`, `action_id`, `rationale`) to numbered next
+  steps of playbooks retrieved in the run, validated by application code and rendered in the playbook's words
+  (agent version 1.1, [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md)). Playbook text unchanged. The comparison
+  records above are agent 1.0 results and stay unchanged.
+- **Tests:** 143 passed (2.31.0); 142 + 1 skipped (2.12.1).
+- **Local notebook:** fresh Python 3.11 kernel, sections 0–30, 35/35 code cells, no errors; frozen metrics
+  reproduced.
+- **Live smoke test** (`reports/live_smoke_20261017.json`): preflight `ok`; `credential_link` failed
+  (HTTP 503); `benign_notification` `needs_human_review` (reviewer: PB-06 does not fit; no request left). No
+  approved live report at this revision.
+- **Colab:** not run at this revision. Needed: the manual checklist in [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md).
+
 ## Recovery and reconciliation (2026-10-16)
 - **Gemini's runtime work:** reported as a quota-abort patch in `agent.py`, `run_batch_triage`,
   `tests/test_quota_handling.py`, repeated `preflight_not_passed` runs, mocking of `run_triage`, a final
@@ -234,8 +247,6 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   reproduce them exactly.
 
 ## Next action (owner)
-1. Download the executed notebook from your successful Colab run (*File → Download → Download .ipynb*) into
-   `colab_import/`, plus `/content/phishtriage/outputs/final_verification.json` and `phase5_verification.json`
-   if the runtime is still alive. These close the open rows in `docs/VERIFICATION.md`.
-2. If that runtime is gone: follow `docs/DEMO_RUNBOOK.md` steps 1–6 in a fresh runtime pinned to the latest SHA,
-   then download the same files.
+1. Run the *Colab verification checklist* in [docs/DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) in a fresh runtime pinned
+   to the latest pushed SHA ([docs/VERIFICATION.md](docs/VERIFICATION.md)).
+2. Download the executed notebook into `colab_import/` so it can be recorded against its revision.

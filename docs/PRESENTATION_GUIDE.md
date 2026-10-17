@@ -61,15 +61,18 @@ except the optional language-model calls runs in the notebook."
   * A reproducible, leakage-aware data pipeline.
   * An honest baseline evaluation with an artifact-sensitivity analysis.
   * A safe evidence model that separates absent from unknown.
-  * Validated retrieval citations.
+  * Validated retrieval citations, and recommended actions limited to validated playbook step IDs rendered in the
+    playbook's own words.
   * A bounded agent loop with reviewer and revision, budgets, quota and retry policy.
   * A safe notebook interface and privacy-preserving export.
-  * 137 offline tests.
+  * 143 offline tests.
 * **Limitations:**
   * Source-confounded data; no external validation.
   * Uncalibrated scores.
   * Pattern-based grounding checks.
   * The reviewer uses the same model.
-  * Live evidence is small: in a bounded comparison three models each completed one synthetic case; the default
+  * Live evidence is small: in a bounded comparison three models each completed one synthetic case (before grounded
+    actions); at the final code one smoke case ended `needs_human_review` and one failed with HTTP 503. The default
     model is a provisional choice (docs/MODEL_SELECTION.md).
+  * A valid step ID proves the step exists in a retrieved playbook, not that the playbook fits the email.
   * Not production-ready.

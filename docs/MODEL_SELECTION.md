@@ -95,7 +95,9 @@ text. This is **not** an independent human evaluation.
   * the classifier output (`phishing`, 0.9997, threshold 0.261) was unchanged.
 * **Shared weakness:** the reviewer approved actions such as "block the IP at the firewall" or "remove the email
   from mailboxes" that cite PB-01 although PB-01 does not contain them. Validation checks only that a cited playbook
-  was retrieved, not that it supports the action. This is a known limitation, recorded but not changed here.
+  was retrieved, not that it supports the action. **Fixed after the comparison** in `6a137d8` (agent version 1.1,
+  section 6 item 4). These results, and `reports/model_comparison_20261017.json`, are from agent version 1.0, whose
+  actions were free text; they are kept unchanged.
 * **3.8 Flash:** one action calls the message "the phishing email" while the assessment is `suspicious`.
 * **3.5 Flash-Lite:** a thin investigation (only `inspect_email`), no playbook retrieval, and an action with no
   playbook reference that calls the host "malicious".
@@ -113,6 +115,11 @@ text. This is **not** an independent human evaluation.
    Only generated tokens are billed, and the request, tool and time budgets are unchanged. **This change has not run
    live.**
 3. **Records:** error categories are now stored, because cmp-02's non-HTTP error lost its category.
+4. **Unsupported recommended actions** (all three models): fixed in `6a137d8`, agent version 1.1. A recommended
+   action is now a reference (`doc_id`, `version`, `action_id`, `rationale`) to a numbered next step of a playbook
+   retrieved in the same run, for example `PB-01.S1`. Application code validates it and shows the playbook's own
+   wording; a rationale that adds steps such as deleting or blocking, or certainty such as "malicious", is rejected.
+   Playbook text was not changed. Details: [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md).
 
 ## 7. Selection and rationale
 Priority order: protocol compatibility and grounding, then completed investigations, then observed errors, then
@@ -143,7 +150,8 @@ automatic fallback.
 
 ## 8. Limitations
 * There were one or two cases per model, a single benign attempt (failed), and one time window on one account.
-* No case has run live at `3e7cbe1` (new token caps, new default).
+* At the final code (`6a137d8`) only the two-case smoke test in section 10 has run live: no approved live report
+  exists at that revision.
 * The review is an engineering review by the assistant, not a human evaluation.
 * Live behaviour can change with provider load and quota. Evidence-only and replay modes stay available without a key.
 
@@ -156,7 +164,34 @@ automatic fallback.
 4. **Section 26:** `RUN_LIVE_AGENT = True`, keep `LIVE_CASE = "credential_link"`, then run **once**. Note the status,
    termination, requests and elapsed time.
 5. **Section 28:** *Live agent*, acknowledgement ticked, **SYNTHETIC: Benign notification**, then **Analyze once**.
-   Check that *Model used* shows `gemini-3.8-flash`, that the disagreement warning is visible, and that nothing
-   says "safe".
+   Check that *Model used* shows `gemini-3.8-flash`, that the disagreement warning is visible, that nothing
+   says "safe", and that each recommended action shows a playbook step ID such as `PB-07.S2`.
 6. If a report says `provider_quota`, stop. Use evidence-only or replay, labelled as such.
 7. Set the flags back to `False`. Set `WIDGETS_CONFIRMED_BY_PERSON = True` only if you saw the form work.
+
+## 10. Final smoke test at the grounded-action code (2026-10-17)
+Not a comparison and not a reliability measurement. Code `6a137d8` (agent 1.1), google-genai 2.31.0, local Mac,
+`gemini-3.8-flash` from `DEFAULT_MODEL` (no override). Limits enforced by the request ledger: 1 preflight and at
+most 12 case requests, SDK retries off. Record: `reports/live_smoke_20261017.json`.
+
+| Step | Started (UTC) | Outcome | Requests (ok) | Provider errors | Tools | Elapsed | Tokens prompt / output / thinking |
+|---|---|---|---|---|---|---|---|
+| preflight | 07:12 | `ok`, `record_check` returned | 1 (1) | none | — | — | not recorded |
+| credential_link | 07:13:07 | **failed** (`provider_server`) | 5 (2) | 3 × HTTP 503 (1 during investigation, 2 on finalize); retry budget of 2 used | inspect_email, get_prediction, retrieve_playbook | 17.4 s | 5,223 / 42 / 183 |
+| benign_notification | 07:13:29 | **needs_human_review** (`budget_exhausted`) | 6 (5) | 1 × HTTP 429 per-minute rate limit, retried after the provider's 29 s delay | 4 (2 playbook searches) | 70.4 s | 15,388 / 933 / 3,261 |
+
+**Totals:** 12 generation requests (1 preflight + 11 case), 1 metadata request, 108 s.
+
+**Engineering review of the benign report** (assistant, not a human evaluation):
+* finalize and review completed; no `MAX_TOKENS` finish with the 4096 / 8192 caps;
+* assessment `insufficient_evidence`; classifier `phishing`, 0.898, unchanged from trusted state;
+* four findings, all cited, and no deterministic validation issue. "No URLs were found" cites the
+  `observed_absent` URL item. Headers, authentication and attachments are listed as unavailable, not absent. There
+  is no "safe" wording and no invented authentication result;
+* three canonical actions passed reference validation: PB-07.S1, PB-07.S2 and PB-06.S1;
+* the reviewer objected (`playbook_mismatch`) that PB-06, "Legitimate urgent communication", does not fit a
+  non-urgent notice. With 6 of 6 requests used, no revision was possible, so the report correctly ended as
+  `needs_human_review`. This shows the limit in practice: a valid reference proves the step exists, not that the
+  playbook applies.
+
+The credential_link failure was a provider overload; nothing was fabricated, and no retry beyond the budget was made.

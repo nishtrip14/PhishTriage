@@ -95,7 +95,7 @@ stateDiagram-v2
 | `EvidenceItem` | `evidence_id` (`<case>/ev-NNN`), `case_id`, `evidence_type`, `source`, `status` ∈ {observed, observed_absent, unverified_claim, unavailable, error}, `value`, escaped `excerpt`, `limitations` | `schemas.py` |
 | `ToolResult` | `tool`, `status` ∈ {ok, unavailable, error, rejected}, `data`, `error`, `evidence_ids`, `limitations`, `truncated_output` (output ≤ 12,000 chars) | `schemas.py` |
 | `RetrievalHit` | `doc_id`, `version`, `section`, `excerpt`, `relevance`, `relevance_type="tfidf_cosine_retrieval_relevance"`, `source_ref` | `schemas.py` |
-| Draft (model output) | `assessment`, `findings[{statement, evidence_ids}]`, `playbook_refs[{doc_id, version, reason}]`, `missing_information`, `recommended_actions` (no classifier fields) | `agent.DRAFT_SCHEMA` |
+| Draft (model output) | `assessment`, `findings[{statement, evidence_ids}]`, `playbook_refs[{doc_id, version, reason}]`, `missing_information`, `recommended_actions[{doc_id, version, action_id, rationale}]` (references to playbook steps; no free-text actions, no classifier fields) | `agent.DRAFT_SCHEMA` |
 | `TriageReport` | trusted `classifier`, `assessment`, findings with validity flags, verified playbook refs, missing info, review state, usage counters, provider `{name, model, sdk_version, errors}`, `termination_reason/detail`, limitations | `agent.py` |
 | Export | summary (structure only) or detailed (opt-in) | `export.report_export` |
 

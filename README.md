@@ -298,7 +298,7 @@ threshold 0.2547 and the same 4 / 0 errors. The cause is not established. Both r
 ## 12. Testing and verification
 | Layer | Evidence | Result |
 |---|---|---|
-| Offline tests | `python -m pytest -q tests` (fake providers, fake clocks, network blocked in the provider/agent tests) | **137 passed** with google-genai 2.31.0 (local, 2026-10-17); with 2.12.1: 136 passed, 1 skipped (ipywidgets absent there) |
+| Offline tests | `python -m pytest -q tests` (fake providers, fake clocks, network blocked in the provider/agent tests) | **143 passed** with google-genai 2.31.0 (local, 2026-10-17, `6a137d8`); with 2.12.1: 142 passed, 1 skipped (ipywidgets absent there) |
 | Local notebook | Sections 0–30, live flags off, at the current code | No errors; frozen evaluation reproduced |
 | Colab notebook | Executed notebook at code `9acefcb` (sections 0–27, offline paths) | No errors; same data and split |
 | Colab run of the current code | Owner reports a successful *Run all*. **The executed notebook has not been supplied** | Pending evidence |
@@ -306,7 +306,8 @@ threshold 0.2547 and the same 4 / 0 errors. The cause is not established. Both r
 | Provider preflight | User-reported `ok` (`gemini-3.6-flash`, SDK 2.12.1) at an unrecorded revision | User-reported only |
 | Provider preflight, current code | Local Mac, `256f5b2`, key from `.env`, google-genai 2.31.0 | `ok` (`gemini-3.6-flash`, 2 calls) |
 | Live cases | User-reported, older code: 1 approved, 1 `provider_server`, 2 `provider_quota`. Local, `256f5b2`: `credential_link` → `provider_server` (3 × HTTP 503, 2 retries) | Superseded by the comparison row below |
-| Model comparison (local, `7849593`) | 3 preflights; `credential_link` approved on gemini-3.6-flash, gemini-3.8-flash and gemini-3.5-flash-lite; 3.6 `benign_notification` failed (`MAX_TOKENS`, then daily quota) and stopped the run | Engineering review: findings grounded; some guidance cites playbooks that don't contain it. Token caps raised afterwards (`3e7cbe1`, not yet run live) |
+| Model comparison (local, `7849593`) | 3 preflights; `credential_link` approved on gemini-3.6-flash, gemini-3.8-flash and gemini-3.5-flash-lite; 3.6 `benign_notification` failed (`MAX_TOKENS`, then daily quota) and stopped the run | Engineering review: findings grounded; some free-text actions cited playbooks that don't contain them (agent 1.0). Fixed by grounded actions in `6a137d8` |
+| Final smoke test (local, `6a137d8`, gemini-3.8-flash) | Preflight `ok`; `credential_link` → `provider_server` (HTTP 503s); `benign_notification` → `needs_human_review` (3 valid playbook steps; reviewer objected that PB-06 does not fit; request budget used up) | No truncation with the new caps; **no approved live report at the final code** ([MODEL_SELECTION.md §10](docs/MODEL_SELECTION.md)) |
 
 The full matrix and provenance are in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 

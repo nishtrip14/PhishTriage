@@ -1,0 +1,317 @@
+{
+  "record": "Final bounded live smoke test (not a comparison, not a reliability measurement)",
+  "code_commit": "6a137d841e0f68855c50bc7a589da8ce82dc1a10",
+  "agent_version": "1.1",
+  "sdk_version": "2.31.0",
+  "model": "gemini-3.8-flash",
+  "model_source": "DEFAULT_MODEL (no MODEL_OVERRIDE, no PHISHTRIAGE_GEMINI_MODEL)",
+  "plan": {
+    "candidates": [
+      "gemini-3.8-flash"
+    ],
+    "cases": [
+      "credential_link",
+      "benign_notification"
+    ],
+    "max_generation": 13,
+    "max_seconds": 600,
+    "pause_between_cases_s": 5.0,
+    "frozen_at_utc": "2026-10-17T07:12:56Z"
+  },
+  "limits": {
+    "preflight_generation_max": 1,
+    "case_generation_max": 12,
+    "sdk_retries": "off (ledger refuses otherwise)"
+  },
+  "preflight": {
+    "status": "ok",
+    "model": "gemini-3.8-flash",
+    "sdk_version": "2.31.0",
+    "network_calls": 2
+  },
+  "attempts": [
+    {
+      "attempt_id": "cmp-01",
+      "started_at_utc": "2026-10-17T07:13:07Z",
+      "model": "gemini-3.8-flash",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "credential_link",
+      "status": "failed",
+      "termination_reason": "provider_server",
+      "termination_detail": "HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "requests": {
+        "model_requests": 5,
+        "ok": 2,
+        "errors": [
+          {
+            "http_status": 503,
+            "category": "server"
+          },
+          {
+            "http_status": 503,
+            "category": "server"
+          },
+          {
+            "http_status": 503,
+            "category": "server"
+          }
+        ],
+        "retries": 2,
+        "retry_wait_s": 2.89,
+        "abnormal_finish": []
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "get_prediction",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 3,
+        "rejected": 0,
+        "rounds": 1
+      },
+      "finalize_completed": false,
+      "review_completed": false,
+      "reviewer_status": "not_run",
+      "review_rounds": 0,
+      "validation_issues": [],
+      "unresolved_objections": [],
+      "tokens": {
+        "prompt_tokens": 5223,
+        "output_tokens": 42,
+        "thought_tokens": 183
+      },
+      "elapsed_s": 17.39,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.9996694384666585,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": null,
+      "report": {
+        "findings": [],
+        "playbook_refs": [],
+        "missing_information": [],
+        "recommended_actions": []
+      }
+    },
+    {
+      "attempt_id": "cmp-02",
+      "started_at_utc": "2026-10-17T07:13:29Z",
+      "model": "gemini-3.8-flash",
+      "sdk_version": "2.31.0",
+      "synthetic_case": "benign_notification",
+      "status": "needs_human_review",
+      "termination_reason": "budget_exhausted",
+      "termination_detail": "",
+      "requests": {
+        "model_requests": 6,
+        "ok": 5,
+        "errors": [
+          {
+            "http_status": 429,
+            "category": "quota"
+          }
+        ],
+        "retries": 1,
+        "retry_wait_s": 29.39,
+        "abnormal_finish": []
+      },
+      "tools": {
+        "calls": [
+          {
+            "name": "inspect_email",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "get_prediction",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          },
+          {
+            "name": "retrieve_playbook",
+            "status": "ok",
+            "code": null
+          }
+        ],
+        "executions": 4,
+        "rejected": 0,
+        "rounds": 2
+      },
+      "finalize_completed": true,
+      "review_completed": true,
+      "reviewer_status": "unresolved",
+      "review_rounds": 1,
+      "validation_issues": [],
+      "unresolved_objections": [
+        "playbook_mismatch"
+      ],
+      "tokens": {
+        "prompt_tokens": 15388,
+        "output_tokens": 933,
+        "thought_tokens": 3261
+      },
+      "elapsed_s": 70.44,
+      "classifier": {
+        "predicted_label": "phishing",
+        "score": 0.898468231327289,
+        "threshold": 0.2606388599527775
+      },
+      "assessment": "insufficient_evidence",
+      "report": {
+        "findings": [
+          {
+            "statement": "The pasted email text notifies the recipient that a monthly statement is available in their normal portal with no action required, and no URLs were found in the provided text.",
+            "evidence_ids": [
+              "cmp-02-benign_notification/ev-001",
+              "cmp-02-benign_notification/ev-002",
+              "cmp-02-benign_notification/ev-007"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "Automated cue scanning matched no patterns for credential requests, payment changes, urgency, attachment lures, or instruction-like text.",
+            "evidence_ids": [
+              "cmp-02-benign_notification/ev-008"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "The classifier returned a predicted label of phishing with an uncalibrated score of 0.898 on the text, subject to substantial documented limitations.",
+            "evidence_ids": [
+              "cmp-02-benign_notification/ev-010"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          },
+          {
+            "statement": "Parser warnings indicate the input is pasted text lacking headers, sender identity, authentication results, or attachments.",
+            "evidence_ids": [
+              "cmp-02-benign_notification/ev-009"
+            ],
+            "rejected_citations": [],
+            "has_valid_citation": true
+          }
+        ],
+        "playbook_refs": [
+          {
+            "doc_id": "PB-07",
+            "version": "1.0",
+            "title": "Missing or conflicting evidence",
+            "reason": "Provides guidance on handling inputs with missing headers and incomplete evidence.",
+            "verified_retrieved": true,
+            "label": "EXAMPLE POLICY guidance"
+          },
+          {
+            "doc_id": "PB-06",
+            "version": "1.0",
+            "title": "Legitimate urgent communication",
+            "reason": "Offers steps for legitimate-appearing communications directing users to normal portals.",
+            "verified_retrieved": true,
+            "label": "EXAMPLE POLICY guidance"
+          }
+        ],
+        "missing_information": [
+          {
+            "item": "sender_address: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-02-benign_notification/ev-003",
+            "source": "evidence_status"
+          },
+          {
+            "item": "reply_to: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-02-benign_notification/ev-004",
+            "source": "evidence_status"
+          },
+          {
+            "item": "authentication_results: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-02-benign_notification/ev-005",
+            "source": "evidence_status"
+          },
+          {
+            "item": "attachments: Pasted input has no headers or attachments.",
+            "evidence_id": "cmp-02-benign_notification/ev-006",
+            "source": "evidence_status"
+          },
+          {
+            "item": "Sender address and reply-to headers were not provided (status unavailable).",
+            "evidence_id": null,
+            "source": "agent"
+          },
+          {
+            "item": "Authentication results (SPF, DKIM, DMARC) were not provided (status unavailable).",
+            "evidence_id": null,
+            "source": "agent"
+          },
+          {
+            "item": "Attachment presence or content was not provided (status unavailable).",
+            "evidence_id": null,
+            "source": "agent"
+          }
+        ],
+        "recommended_actions": [
+          {
+            "doc_id": "PB-07",
+            "version": "1.0",
+            "action_id": "PB-07.S1",
+            "action": "State explicitly what is missing; do not treat missing information as evidence of safety",
+            "source": "playbook",
+            "rationale": "Explicitly notes missing headers and attachments rather than assuming safety from their absence.",
+            "rationale_withheld": []
+          },
+          {
+            "doc_id": "PB-07",
+            "version": "1.0",
+            "action_id": "PB-07.S2",
+            "action": "Ask for the original message as an .eml file if headers or attachments matter",
+            "source": "playbook",
+            "rationale": "Allows obtaining headers and original routing details via an .eml export for verification.",
+            "rationale_withheld": []
+          },
+          {
+            "doc_id": "PB-06",
+            "version": "1.0",
+            "action_id": "PB-06.S1",
+            "action": "Act through normal channels, such as opening the known portal rather than the email link, when unsure",
+            "source": "playbook",
+            "rationale": "Directs the user to access their monthly statement by navigating directly to their known portal.",
+            "rationale_withheld": []
+          }
+        ]
+      }
+    }
+  ],
+  "skipped": [],
+  "stopped": null,
+  "ledger": {
+    "generation_requests": 12,
+    "metadata_requests": 1,
+    "refused_by_ledger": 0,
+    "max_generation": 13,
+    "elapsed_s": 107.8
+  },
+  "engineering_review": {
+    "reviewer": "coding assistant (engineering review, not a human evaluation)",
+    "cmp-01": "credential_link failed with provider_server: HTTP 503 on the first investigate request (retried) and twice on finalize (retry budget 2 used). Tools ran (inspect_email, get_prediction, retrieve_playbook); no draft, no assessment, no actions; nothing fabricated.",
+    "cmp-02": "benign_notification needs_human_review / budget_exhausted. One 429 rate-limit (category quota/rate_limit, provider retry delay 29.4 s) was retried once. Finalize and review completed with no MAX_TOKENS finish (4096/8192 caps). Assessment insufficient_evidence; classifier phishing 0.898 unchanged from trusted state. Four findings, all cited, no deterministic validation issues; 'no URLs were found in the provided text' cites the observed_absent URL item; headers, authentication and attachments listed as unavailable, not absent; no safe wording; no invented authentication result. Three canonical playbook actions (PB-07.S1, PB-07.S2, PB-06.S1) passed reference validation. The reviewer objected (playbook_mismatch) that PB-06 'Legitimate urgent communication' does not fit a non-urgent notice; with 6 of 6 requests used no revision was possible, so the report correctly ended as needs_human_review."
+  }
+}

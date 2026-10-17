@@ -81,8 +81,14 @@ framework.
 ## 7. How retrieval grounds explanations (RAG)
 The investigator can call `retrieve_playbook(query)`. Matching sections of the example playbooks (with ID, version
 and source path) come back as tool results, and the model may cite them. The application then checks that any
-cited playbook was **really retrieved** in this run, with the same version. The reviewer receives the retrieved
-excerpts and checks that the recommended actions follow them.
+cited playbook was **really retrieved** in this run, with the same version.
+
+Recommended actions are not written by the model. Each playbook lists numbered next steps (for example `PB-01.S1`),
+and the model can only pick step IDs from playbooks it retrieved in this run. The application checks the ID and the
+version, then shows the playbook's own wording. The model's short rationale is shown separately and rejected if it
+adds steps (such as "delete" or "block") or certainty (such as "malicious"). A valid ID proves the step exists in
+that playbook, not that the playbook fits this email, so the reviewer judges fit and a human decides. If no step
+fits, the report says so. The system never carries out any action.
 
 The retrieval score is cosine similarity between texts. It says "this playbook's wording matches the query", **not**
 "this email is phishing".
