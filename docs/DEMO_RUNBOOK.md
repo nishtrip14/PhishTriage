@@ -31,7 +31,8 @@ In the report, point to:
 
 ## 5. Live example (only if the section 21 preflight shows `ok` in this runtime)
 1. The `GEMINI_API_KEY` Colab Secret must exist with *Notebook access* on.
-2. **Section 21:** `RUN_LLM_PREFLIGHT = True`, then run the cell. Expect `"status": "ok"` for `gemini-3.6-flash`.
+2. **Section 21:** `RUN_LLM_PREFLIGHT = True`, then run the cell. Expect `"status": "ok"` for `gemini-3.8-flash` (provisional default;
+   [MODEL_SELECTION.md](MODEL_SELECTION.md)).
 3. **Section 28:** *Mode: Live agent*, tick the acknowledgement, choose a **synthetic** example, then **Analyze**.
    Show **Model used** and the reviewer outcome.
 

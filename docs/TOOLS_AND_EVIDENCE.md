@@ -115,7 +115,8 @@ instruction-like text as evidence. Whether an LLM agent ignores such text is som
 - **Key:** read from the Colab Secret `GEMINI_API_KEY` (or the environment). It is never printed, saved or
   returned, and error text is redacted.
 - **Model:** at phase 3 (`86993a3`) the default was `gemini-3.8-flash`. **Since `1955903`** the single configured
-  default is `gemini-3.6-flash` (`LLMSettings`, section 21 `MODEL_OVERRIDE`).
+  default was `gemini-3.6-flash`; **since `3e7cbe1`** it is `gemini-3.8-flash`, a provisional choice
+  ([MODEL_SELECTION.md](MODEL_SELECTION.md)) (`LLMSettings`, section 21 `MODEL_OVERRIDE`).
   Override it with `PHISHTRIAGE_GEMINI_MODEL`.
 - **Steps:**
   1. `models.get(model)` rejects an invalid ID before any generation call.

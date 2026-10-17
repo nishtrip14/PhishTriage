@@ -91,7 +91,7 @@ Mark a new command as verified only after running it.
 
 ## Documentation map
 README.md (entry point) → docs/PROJECT_EXPLAINED.md → docs/ARCHITECTURE.md → docs/VERIFICATION.md (current
-matrix). Demo and viva: docs/DEMO_RUNBOOK.md, docs/PRESENTATION_GUIDE.md, docs/VIVA_QUESTIONS.md. Keep section
+matrix); model choice in docs/MODEL_SELECTION.md. Demo and viva: docs/DEMO_RUNBOOK.md, docs/PRESENTATION_GUIDE.md, docs/VIVA_QUESTIONS.md. Keep section
 numbers, variable names and test counts in these files synchronized with the notebook and the latest test run.
 
 ## Status tracking

@@ -14,9 +14,10 @@ verify or escalate them. PhishTriage is **decision support for human email triag
 help-desk analyst or security trainee. It explains which evidence was found, what is unknown, and what a human
 should check next. It does **not** block, delete or reply to email, and it does not connect to a mailbox.
 
-**Status (2026-10-16).** Every planned component is implemented and tested offline. The notebook has run end to
-end locally at the current code, and in Google Colab at an earlier revision. Live Gemini behaviour: a local preflight at the
-current code passed, but its one live case ended in provider 503 errors; earlier successes are user-reported, and widget interaction in Colab has not yet been confirmed with evidence. See
+**Status (2026-10-17).** Every planned component is implemented and tested offline. The notebook has run end to
+end locally at the current code, and in Google Colab at an earlier revision. Live Gemini: in a small bounded comparison
+(2026-10-17, [docs/MODEL_SELECTION.md](docs/MODEL_SELECTION.md)) three models each completed one synthetic case; the
+provisional default is `gemini-3.8-flash`. Live results remain small-sample, and widget interaction in Colab has not yet been confirmed with evidence. See
 [Testing and verification](#12-testing-and-verification) and [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Contents
@@ -76,7 +77,8 @@ Local development (not needed for the demo): see [CLAUDE.md](CLAUDE.md) for the 
 1. **Key:** create a Gemini API key in Google AI Studio. In Colab, open the key icon (*Secrets*), add
    `GEMINI_API_KEY` and switch on **Notebook access**. Never paste the key into a cell or a chat.
 2. **Model:** the single setting is `MODEL_OVERRIDE` in the **section 21** code cell. `None` means
-   `$PHISHTRIAGE_GEMINI_MODEL` if set, otherwise **`gemini-3.6-flash`**.
+   `$PHISHTRIAGE_GEMINI_MODEL` if set, otherwise **`gemini-3.8-flash`** (a provisional choice; see
+   [docs/MODEL_SELECTION.md](docs/MODEL_SELECTION.md)).
 3. **Preflight:** set `RUN_LLM_PREFLIGHT = True` in section 21 and run that cell. Expect `"status": "ok"`.
 4. **One live case:** in **section 26**, set `RUN_LIVE_AGENT = True`. The default case is
    `LIVE_CASE = "credential_link"`. `RUN_ALL_LIVE_CASES = True` runs all four synthetic cases (at most 24 requests)
@@ -296,14 +298,15 @@ threshold 0.2547 and the same 4 / 0 errors. The cause is not established. Both r
 ## 12. Testing and verification
 | Layer | Evidence | Result |
 |---|---|---|
-| Offline tests | `python -m pytest -q tests` (fake providers, fake clocks, network blocked in the provider/agent tests) | **127 passed** with google-genai 2.31.0 (local, 2026-10-16); with 2.12.1: 126 passed, 1 skipped (ipywidgets absent there) |
+| Offline tests | `python -m pytest -q tests` (fake providers, fake clocks, network blocked in the provider/agent tests) | **137 passed** with google-genai 2.31.0 (local, 2026-10-17); with 2.12.1: 136 passed, 1 skipped (ipywidgets absent there) |
 | Local notebook | Sections 0–30, live flags off, at the current code | No errors; frozen evaluation reproduced |
 | Colab notebook | Executed notebook at code `9acefcb` (sections 0–27, offline paths) | No errors; same data and split |
 | Colab run of the current code | Owner reports a successful *Run all*. **The executed notebook has not been supplied** | Pending evidence |
 | Widget interaction | Requires a person (`WIDGETS_CONFIRMED_BY_PERSON` in section 30) | Unverified |
 | Provider preflight | User-reported `ok` (`gemini-3.6-flash`, SDK 2.12.1) at an unrecorded revision | User-reported only |
 | Provider preflight, current code | Local Mac, `256f5b2`, key from `.env`, google-genai 2.31.0 | `ok` (`gemini-3.6-flash`, 2 calls) |
-| Live cases | User-reported, older code: 1 approved, 1 `provider_server`, 2 `provider_quota`. Local, `256f5b2`: `credential_link` → `provider_server` (3 × HTTP 503, 2 retries) | No live case has completed at the current code |
+| Live cases | User-reported, older code: 1 approved, 1 `provider_server`, 2 `provider_quota`. Local, `256f5b2`: `credential_link` → `provider_server` (3 × HTTP 503, 2 retries) | Superseded by the comparison row below |
+| Model comparison (local, `7849593`) | 3 preflights; `credential_link` approved on gemini-3.6-flash, gemini-3.8-flash and gemini-3.5-flash-lite; 3.6 `benign_notification` failed (`MAX_TOKENS`, then daily quota) and stopped the run | Engineering review: findings grounded; some guidance cites playbooks that don't contain it. Token caps raised afterwards (`3e7cbe1`, not yet run live) |
 
 The full matrix and provenance are in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 

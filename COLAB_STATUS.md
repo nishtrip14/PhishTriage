@@ -111,6 +111,26 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   output or work file.
 - **Not shown by this:** a completed live investigation, review or revision at the current code.
 
+## Model comparison and selection (2026-10-17)
+- **Comparison** (`7849593`, local, google-genai 2.31.0; [docs/MODEL_SELECTION.md](docs/MODEL_SELECTION.md),
+  `reports/model_comparison_20261017.json`): plan frozen first; at most 39 generation requests, enforced by a
+  ledger that refuses SDK retries. 22 generation and 4 metadata requests were used.
+  - Preflight `ok` for gemini-3.6-flash, gemini-3.8-flash and gemini-3.5-flash-lite.
+  - `credential_link` **approved** on all three: 5, 5 and 4 requests; 30.2, 61.2 and 6.1 s.
+  - gemini-3.6-flash `benign_notification` **failed**: finalize truncated (`MAX_TOKENS`), then HTTP 429 daily quota.
+    That stopped the comparison, and the other two benign cases were not run.
+  - A first attempt at `c49d844` sent nothing: the harness let the SDK client close. Fixed.
+- **Engineering review** by the assistant (not a human evaluation): findings grounded, no invented IDs, tools or
+  authentication, classifier unchanged. Some recommended actions cite playbooks that do not contain them.
+- **Fixes:**
+  - `temperature` removed (deprecated for Gemini 3.8 Flash);
+  - output-token caps raised to 4096/8192, because thinking counts against them;
+  - error categories now recorded.
+- **Default:** `gemini-3.8-flash`, provisional (`3e7cbe1`). Not yet run live with the new caps.
+- **Tests:** 137 passed (2.31.0); 136 + 1 skipped (2.12.1).
+- **Local notebook:** a fresh Python 3.11 kernel ran sections 0–30 with no errors, and section 0 installed ipywidgets.
+  Colab rendering is still unverified.
+
 ## Recovery and reconciliation (2026-10-16)
 - **Gemini's runtime work:** reported as a quota-abort patch in `agent.py`, `run_batch_triage`,
   `tests/test_quota_handling.py`, repeated `preflight_not_passed` runs, mocking of `run_triage`, a final
@@ -206,8 +226,8 @@ timestamps and executed notebook were not recorded, and none is inferred here.
   `1955903`); the evidence commit follows it (see `git log`). `main` is untouched at `170260b`.
 - **Notebook:** 70 cells, sections 0–30, outputs cleared, `RUN_LLM_PREFLIGHT`, `RUN_LIVE_AGENT`,
   `RUN_ALL_LIVE_CASES` and `WIDGETS_CONFIRMED_BY_PERSON` all `False`. *Run all* never calls the API or waits for input.
-- **Configured live model:** `gemini-3.6-flash` (section 21 `MODEL_OVERRIDE` to change it; a new preflight is
-  then required).
+- **Configured live model:** `gemini-3.6-flash` at that checkpoint (since `3e7cbe1`: `gemini-3.8-flash`; see
+  the model-comparison entry). Section 21 `MODEL_OVERRIDE` changes it; a new preflight is then required.
 - **Tests:** 119 offline tests pass (google-genai 2.31.0); 118 pass + 1 skipped on google-genai 2.12.1.
 - **Widget rendering in Colab:** UNVERIFIED until a person confirms it in section 30.
 - **Unchanged:** the frozen phase 2 configurations, thresholds and reports, and the split manifest. Re-runs

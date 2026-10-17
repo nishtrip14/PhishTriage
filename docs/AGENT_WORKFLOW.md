@@ -150,7 +150,7 @@ not an independent guarantee.
 
 ## Model configuration (phase 5)
 - **One setting:** `LLMSettings` (section 21: `MODEL_OVERRIDE`, else `$PHISHTRIAGE_GEMINI_MODEL`, else
-  `gemini-3.6-flash`) feeds the preflight, the live adapter, the interface and the reports.
+  `gemini-3.8-flash` since `3e7cbe1`, provisional; see [MODEL_SELECTION.md](MODEL_SELECTION.md)) feeds the preflight, the live adapter, the interface and the reports.
 - **Approval:** `PreflightRegistry` keys approval by (model, installed google-genai version).
   - A model or SDK change has no approval until its own preflight passes.
   - An unchanged, approved configuration is reused without network calls.
