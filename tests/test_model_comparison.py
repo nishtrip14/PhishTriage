@@ -50,6 +50,20 @@ def test_ledger_caps_generation_and_counts_metadata(no_network):
     assert fake.calls == 2 and ledger.generation == 2 and ledger.metadata == 1 and ledger.refused == 1
 
 
+def test_budgeted_client_keeps_the_sdk_client_alive(no_network):
+    import gc, weakref
+
+    class Client:
+        def __init__(self):
+            self.models = FakeModels()
+    inner = Client()
+    ref = weakref.ref(inner)
+    wrapped = C.BudgetedClient(inner, C.RequestLedger(1, 60), client_attempts=1)
+    del inner
+    gc.collect()
+    assert ref() is not None and wrapped.models is not None
+
+
 def test_ledger_refuses_sdk_retries(no_network):
     ledger, fake = C.RequestLedger(max_generation=5, max_seconds=60), FakeModels()
     retrying = types.GenerateContentConfig(http_options=types.HttpOptions(

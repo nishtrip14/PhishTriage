@@ -68,6 +68,7 @@ class BudgetedClient:
     """Wraps a google-genai Client: generation goes through the ledger; metadata calls are counted."""
 
     def __init__(self, client, ledger: RequestLedger, client_attempts: int | None):
+        self._client = client          # keep the SDK client alive: when collected it closes its HTTP connection
         self.models = _BudgetedModels(client.models, ledger, client_attempts)
 
 
