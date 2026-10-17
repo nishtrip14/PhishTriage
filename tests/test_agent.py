@@ -52,7 +52,7 @@ def inspect_then_ready():
 def good_draft(req):
     return text(AR.draft("insufficient_evidence", [
         AR.finding("Pasted text: sender information is unavailable.", AR.evidence_ids(req, "sender_address"))],
-        [], missing=["original .eml"], actions=[{"action": "Ask for the original .eml.", "playbook_refs": []}]))
+        [], missing=["original .eml"]))
 
 
 # ---------------------------------------------------------------- happy paths and the reviewer loop
@@ -119,12 +119,12 @@ def test_cross_case_unknown_and_unretrieved_citations_are_rejected(tools):
             AR.finding("invented", ["case-ambiguous/ev-999"]),
             AR.finding("never retrieved", ["case-ambiguous/ev-002"]),
         ], [{"doc_id": "PB-09", "version": "1.0", "reason": "invented playbook"}],
-            actions=[{"action": "x", "playbook_refs": ["PB-09"]}]))
+            actions=[{"doc_id": "PB-09", "version": "1.0", "action_id": "PB-09.S1", "rationale": "x"}]))
     res, _ = run(tools, "case-ambiguous", [text("READY"), bad, AR.approve(), bad, AR.approve()])
     r = res.report
     codes = {i["code"] for i in r.review["validation_issues"]}
     assert {"cross_case_citation", "unknown_citation", "citation_not_retrieved", "unsupported_playbook_citation",
-            "action_cites_uncited_playbook"} <= codes
+            "action_playbook_not_retrieved"} <= codes
     assert r.status == "needs_human_review"                         # reviewer "approve" cannot override errors
     assert all(not f["has_valid_citation"] and f["rejected_citations"] for f in r.findings)
     assert not r.playbook_refs[0]["verified_retrieved"]

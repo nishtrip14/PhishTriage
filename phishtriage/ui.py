@@ -250,8 +250,13 @@ def render_attempt_html(attempt: Attempt, store, stale: bool = False) -> str:
                                + ("" if p["verified_retrieved"] else " <b>[not verified]</b>") + "</li>"
                                for p in r.playbook_refs) + "</ul>")
     if r.recommended_actions:
-        parts.append("<h4>Recommended human actions</h4><ul>"
-                     + "".join(f"<li>{esc(a['action'])}</li>" for a in r.recommended_actions) + "</ul>")
+        parts.append("<h4>Recommended human actions (playbook wording; nothing is executed)</h4><ul>"
+                     + "".join(f"<li>{esc(a['action'])} <span class='muted'>({esc(a['action_id'])}, "
+                               f"{esc(a['doc_id'])} v{esc(a['version'])})</span>"
+                               + (f"<br><span class='muted'>model rationale: {esc(a['rationale'])}</span>"
+                                  if a.get("rationale") else "") + "</li>" for a in r.recommended_actions) + "</ul>")
+    elif r.action_note:
+        parts.append(f"<h4>Recommended human actions</h4><div>{esc(r.action_note)}</div>")
     rv = r.review
     issues = "".join(f"<li>[{esc(i['severity'])}] {esc(i['code'])}: {esc(i['detail'])}</li>"
                      for i in rv.get("validation_issues", []))

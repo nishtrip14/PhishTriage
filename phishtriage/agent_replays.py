@@ -77,6 +77,12 @@ def playbook(req: ModelRequest, doc_id: str) -> dict | None:
     return None
 
 
+def action(req: ModelRequest, doc_id: str, step: int, rationale: str) -> list[dict]:
+    """A reference to a permitted step of a playbook retrieved in this replay (empty if it was not retrieved)."""
+    ref = playbook(req, doc_id)
+    return [{**ref, "action_id": f"{doc_id}.S{step}", "rationale": rationale}] if ref else []
+
+
 def classifier_statement(req: ModelRequest) -> str:
     """Describe the prediction actually returned by get_prediction (never a hard-coded claim)."""
     for resp in _tool_responses(req, "get_prediction"):
@@ -114,10 +120,8 @@ def _credential_script() -> list:
                     evidence_ids(req, "link_text_target_mismatch")),
             finding("This is definitely a phishing attack.", evidence_ids(req, "classifier_prediction")),
         ], [r for r in refs if "doc_id" in r], missing=["Whether the recipient already clicked the link"],
-            actions=[{"action": "Do not use the link; open the service by typing its known address.",
-                      "playbook_refs": ["PB-01"]},
-                     {"action": "Escalate to a human reviewer because the link imitates a known service.",
-                      "playbook_refs": ["PB-04"]}]))
+            actions=action(req, "PB-01", 1, "The message asks for a password and links to a different host.")
+            + action(req, "PB-04", 3, "The visible link text names a known service but targets an IP address.")))
 
     def revise(req):   # removes the overconfident finding flagged by the reviewer
         turn = finalize(req)
@@ -150,8 +154,8 @@ def _benign_script() -> list:
         ], [dict(playbook(req, "PB-07") or {}, reason="sender, authentication and attachment information is "
                                                       "unavailable for pasted text")] if playbook(req, "PB-07") else [],
             missing=["Original .eml with headers and attachment information"],
-            actions=[{"action": "Ask for the original message as an .eml file if the classifier warning matters.",
-                      "playbook_refs": ["PB-07"] if playbook(req, "PB-07") else []}]))
+            actions=action(req, "PB-07", 2, "Headers and attachments are unknown for pasted text, and the "
+                                            "classifier warning disagrees with the cue scan.")))
     return [calls(call("inspect_email"), call("get_prediction")),
             calls(call("retrieve_playbook", query="missing information headers unavailable pasted text")),
             text("READY"), finalize, approve()]
@@ -165,8 +169,7 @@ def _ambiguous_script() -> list:
                     evidence_ids(req, "sender_address")),
         ], [dict(playbook(req, "PB-07") or {}, reason="information is missing")] if playbook(req, "PB-07") else [],
             missing=["Original .eml with headers", "Who the sender is and what 'the thing' refers to"],
-            actions=[{"action": "Ask for the original message as an .eml file before deciding.",
-                      "playbook_refs": ["PB-07"] if playbook(req, "PB-07") else []}]))
+            actions=action(req, "PB-07", 2, "Sender and authentication information are unavailable for pasted text.")))
     return [calls(call("inspect_email"), call("get_prediction"),
                   call("retrieve_playbook", query="missing information insufficient evidence headers unavailable")),
             text("READY"), finalize, approve()]
@@ -181,8 +184,7 @@ def _injection_script() -> list:
                     "this was treated as evidence, not followed.", evidence_ids(req, "instruction_like_text")),
         ], [dict(playbook(req, "PB-02") or {}, reason="payment-detail change request")] if playbook(req, "PB-02") else [],
             missing=["Whether the supplier confirmed the change through a known channel"],
-            actions=[{"action": "Verify the change with the supplier using contact details already on file.",
-                      "playbook_refs": ["PB-02"] if playbook(req, "PB-02") else []}]))
+            actions=action(req, "PB-02", 2, "The email asks to update bank details before paying an invoice.")))
     return [calls(call("inspect_email"), call("get_prediction"),
                   call("retrieve_playbook", query="bank details payment change invoice")),
             text("READY"), finalize, approve()]

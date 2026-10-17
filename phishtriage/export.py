@@ -14,7 +14,7 @@ from pathlib import Path
 
 EXPORT_VERSION = "1.0"
 SUMMARY_OMITS = ["email subject and body", "attachment content and filenames", "case identifiers",
-                 "finding statements", "recommended-action text", "reviewer objection text",
+                 "finding statements", "recommended-action text and model rationale", "reviewer objection text",
                  "validation details", "evidence excerpts", "agent-listed missing information text"]
 
 
@@ -55,7 +55,8 @@ def report_export(report, trace, store=None, *, detailed: bool = False, attempt:
                                  "evidence_type": evidence[m["evidence_id"]].evidence_type
                                  if m.get("evidence_id") in evidence else None} for m in r.missing_information],
         "recommended_action_count": len(r.recommended_actions),
-        "recommended_action_playbooks": sorted({d for a in r.recommended_actions for d in a["playbook_refs"]}),
+        "recommended_action_ids": [f"{a['action_id']}@v{a['version']}" for a in r.recommended_actions],
+        "action_note": r.action_note,
         "review": {"reviewer_status": r.review.get("reviewer_status"), "rounds": r.review.get("rounds"),
                    "unresolved_objection_types": [o.get("issue_type") for o in r.review.get("unresolved_objections", [])],
                    "validation_issue_codes": [i["code"] for i in r.review.get("validation_issues", [])]},

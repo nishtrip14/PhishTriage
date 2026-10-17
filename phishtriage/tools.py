@@ -28,7 +28,8 @@ TOOL_SPECS = [
      "parameters": {"type": "object", "properties": {"case_id": {"type": "string"}}, "required": ["case_id"]}},
     {"name": "retrieve_playbook",
      "description": "Search the example playbooks. Relevance is TF-IDF cosine similarity, not phishing probability; "
-                    "weak matches are not returned.",
+                    "weak matches are not returned. Each hit lists the playbook's permitted_actions "
+                    "(action_id + canonical text), the only actions a report may recommend.",
      "parameters": {"type": "object", "properties": {"query": {"type": "string"},
                                                      "top_k": {"type": "integer", "minimum": 1, "maximum": 5}},
                     "required": ["query"]}},
@@ -139,8 +140,10 @@ class TriageTools:
         if not 1 <= top_k <= 5:
             return ToolResult(tool="retrieve_playbook", status="rejected", error="top_k must be between 1 and 5")
         res = self.index.search(query, top_k=top_k)
-        data = {"query_chars": len(query or ""), "status": res["status"], "hits": [h.to_dict() for h in res["hits"]],
-                "notes": res["notes"]}
+        hits = [{**h.to_dict(), "permitted_actions": [{"action_id": a, "text": t} for a, t in
+                                                      self.index.actions[h.doc_id]["actions"].items()]}
+                for h in res["hits"]]
+        data = {"query_chars": len(query or ""), "status": res["status"], "hits": hits, "notes": res["notes"]}
         if res["status"] == "empty_query":
             return ToolResult(tool="retrieve_playbook", status="rejected", error="empty query", data=data)
         if res["status"] == "no_relevant_match":

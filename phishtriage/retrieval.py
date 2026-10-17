@@ -35,6 +35,19 @@ def load_playbooks(path: Path = PLAYBOOK_PATH) -> dict:
     return doc
 
 
+def action_id(doc_id: str, index: int) -> str:
+    """Deterministic identifier of a playbook next step: its 1-based position, e.g. PB-01.S2. Positions are only
+    stable within one playbook version, so every reference is checked together with the version."""
+    return f"{doc_id}.S{index}"
+
+
+def playbook_actions(doc: dict) -> dict:
+    """{doc_id: {"version", "actions": {action_id: canonical text}}}: the only actions a report may recommend."""
+    return {p["doc_id"]: {"version": p["version"],
+                          "actions": {action_id(p["doc_id"], i): t for i, t in enumerate(p["next_steps"], 1)}}
+            for p in doc["playbooks"]}
+
+
 def chunk_playbooks(doc: dict) -> list[dict]:
     chunks = []
     for p in doc["playbooks"]:
@@ -52,6 +65,7 @@ class PlaybookIndex:
         self.doc = doc or load_playbooks()
         self.label = self.doc["label"]
         self.chunks = chunk_playbooks(self.doc)
+        self.actions = playbook_actions(self.doc)
         self.vectorizer = TfidfVectorizer(lowercase=True, stop_words="english", ngram_range=(1, 2),
                                           sublinear_tf=True)
         self.matrix = self.vectorizer.fit_transform([c["text"] for c in self.chunks])
